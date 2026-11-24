@@ -1,0 +1,10 @@
+Django>=5.2,<5.3
+streamlit
+ollama
+pypdf
+python-docx
+rank_bm25
+numpy
+bcrypt
+qrcode[pil]
+pytest

@@ -1,0 +1,55 @@
+# DocuTrust AI Configuration
+# Beginners: edit any value below without touching Python code.
+
+[app]
+app_name = "DocuTrust AI"                                     # Name shown in page title, header, and sidebar
+tagline = "Private, Offline Document Q&A, Sharing & Attendance" # Short subtitle shown on the welcome screen
+db_path = "data/docutrust.db"                                 # SQLite database file path relative to project root
+ollama_host = "http://127.0.0.1:11434"                        # Local Ollama API URL (offline, no cloud calls)
+
+[models]
+chat_model = "qwen2.5:0.5b"                                   # Default local chat LLM (alternatives: qwen3.5:0.8b, llama3.2:3b, qwen3:0.6b)
+embed_model = "nomic-embed-text"                              # Default embedding model (upgrade: bge-m3; requires re-index)
+temperature = 0.1                                             # Lower temperature keeps answers strict and factual
+num_ctx = 4096                                                # Context token budget sent to Ollama per question
+
+[rag]
+chunk_size = 500                                              # Approximate characters per indexed text chunk
+chunk_overlap = 80                                            # Shared characters between adjacent chunks
+top_k = 4                                                     # Max chunks returned per question
+bm25_weight = 0.3                                             # Keyword match weight in hybrid search
+vector_weight = 0.7                                           # Embedding cosine similarity weight in hybrid search
+min_score = 0.15                                              # Minimum hybrid score needed before refusing
+okf_boost = 0.15                                              # Tie-breaker score boost for admin-pinned OKF notes
+okf_max_docs = 3                                              # Cap on pinned OKF documents so they never crowd out search
+okf_reserve_slot = true                                       # Reserve 1 top_k slot for the best permitted OKF note on valid matches
+
+[uploads]
+max_file_mb = 10                                              # Maximum uploaded file size in megabytes
+max_docs_per_user = 50                                        # Maximum number of documents a single user can own
+allowed_extensions = ["txt", "md", "pdf", "docx"]             # Allowed upload file types (no OCR)
+
+[auth]
+max_failed_logins = 5                                         # Failed password attempts before lockout
+lockout_minutes = 15                                          # Lockout duration in minutes
+
+[sharing]
+allow_expiry = false                                          # Enable optional expiration date when sharing a doc
+default_expiry_days = 7                                       # Default days until a share expires if enabled
+
+[attendance]
+qr_enabled = true                                             # Show QR code image alongside daily 6-digit code
+absent_days_for_strike = 3                                    # Business-day absences per month before adding 1 strike
+strikes_for_action = 3                                        # Strikes required to trigger admin alert or freeze
+action = "warn"                                               # "warn" or "freeze" (default warn: never auto-freeze silently)
+workdays = [0, 1, 2, 3, 4]                                    # Expected weekdays: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri
+
+[audit]
+hash_chain = true                                             # Link each audit row to the previous row with SHA-256
+
+[legal]
+# Facts shown on the Privacy and Terms pages. Leave a value empty ("") and the page marks it "To be confirmed".
+operator_name = ""                                            # Person or team that runs this website
+contact_email = ""                                            # Inbox for privacy and early-access questions
+country = ""                                                  # Country whose law governs the Terms
+effective_date = ""                                           # Date the current Privacy and Terms take effect, e.g. "1 December 2026"

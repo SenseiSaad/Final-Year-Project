@@ -1,0 +1,74 @@
+# DocuTrust AI UI Labels and Messages
+# Beginners: change any wording below without editing Python files.
+
+[common]
+welcome_badge = "100% Offline Local AI • Zero Cloud Calls"
+not_logged_in = "Please sign in on the Home page to access this feature."
+admin_only = "This page is restricted to administrators."
+logout_button = "Sign out"
+footer_note = "DocuTrust AI • Local SQLite + Ollama Workspace"
+
+[welcome]
+hero_title = "Ask. Verify. Protect. Wherever your team works."
+hero_subtitle = "Upload company policies, handbooks, and notes. Employees get cited answers strictly from documents they are allowed to see."
+preview_title = "How DocuTrust AI Protects Every Answer"
+preview_doc_title = "Sample Policy Preview: Remote & Leave Guidelines"
+preview_doc_body = "Employees may carry over up to 5 unused annual leave days into Q1. All travel expenses above $150 require manager approval before booking. Private HR memos remain visible only to their owner and explicitly shared users."
+cards_heading = "Built for Simple, Auditable Local Teams"
+card_1_title = "Private Document Q&A"
+card_1_desc = "Hybrid BM25 + vector search filtered by SQL permissions before ranking."
+card_2_title = "Controlled Sharing"
+card_2_desc = "Share one document with one teammate and revoke access at any time."
+card_3_title = "Daily Code Attendance"
+card_3_desc = "HMAC 6-digit daily codes, optional QR check-in, and warn-first strike tracking."
+card_4_title = "Tamper-Evident Audit Log"
+card_4_desc = "Append-only SQLite activity trail chained with SHA-256 hashes."
+roles_heading = "Workspace Access Modes"
+role_1_title = "Employee"
+role_1_desc = "Ask questions across allowed docs, upload own files, share privately, and check in daily."
+role_2_title = "Department"
+role_2_desc = "Access department-scoped handbooks and team documents without leaking across teams."
+role_3_title = "Administrator"
+role_3_desc = "Manage users, generate attendance codes, review strikes, verify audit hashes, and view stats."
+
+[login]
+heading = "Sign In to Workspace"
+username_label = "Username"
+password_label = "Password"
+submit_label = "Sign In"
+invalid_msg = "Invalid username or password."
+locked_msg = "Account temporarily locked due to repeated failed attempts."
+disabled_msg = "This account is currently disabled. Contact an administrator."
+
+[dashboard]
+heading = "Workspace Overview"
+subtitle = "Live activity, document coverage, and attendance status from local SQLite."
+status_online = "Local Ollama Ready"
+status_offline = "Ollama Unreachable"
+recent_activity_title = "Recent Audit Activity"
+
+[ask]
+heading = "Ask Your Documents"
+input_placeholder = "Ask a question in English or Roman Urdu..."
+sources_label = "Sources used"
+
+[documents]
+heading = "Document Library"
+upload_heading = "Upload New Document"
+reindex_warning = "Embedding model changed since existing documents were indexed. Please re-index all documents."
+
+[shared]
+heading = "Shared With Me"
+empty_msg = "No documents have been shared with you yet."
+
+[attendance]
+heading = "Daily Attendance"
+code_label = "Enter today's 6-digit attendance code"
+
+[audit]
+heading = "Audit Log"
+verify_button = "Verify log integrity"
+
+[admin]
+heading = "Admin Console"
+stats_heading = "Usage & Q&A Summary"
