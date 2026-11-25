@@ -21,8 +21,8 @@ export function Roles({ facts }: { facts: Facts }) {
     {
       icon: KeyRound,
       title: "Administrator",
-      text: "Adds people, assigns roles and departments, disables accounts and checks that the activity ledger is intact.",
-      points: ["User and department management", "Ledger verification and CSV export", "Usage and answer statistics"],
+      text: "Adds people, pins official OKF guidance, assigns roles and checks that the activity ledger is intact.",
+      points: ["User and department management", "OKF pinning & ledger verification", "CSV export and usage stats"],
     },
   ];
 
@@ -32,19 +32,15 @@ export function Roles({ facts }: { facts: Facts }) {
         <SectionHead
           id="roles-title"
           title="Three roles with clear boundaries"
-          lead="Everyone signs in with their own account. What they can find depends on who they are, not on what they type."
+          lead="What a person can find depends on who they are, not on what they type."
         />
-        <div className="mt-14 grid overflow-hidden rounded-2xl border border-line md:grid-cols-3">
+        <div className="mt-14 grid gap-10 md:grid-cols-3 md:gap-12">
           {roles.map((role) => (
-            <article
-              key={role.title}
-              data-reveal
-              className="border-line bg-surface p-6 sm:p-8 [&:not(:last-child)]:border-b md:[&:not(:last-child)]:border-b-0 md:[&:not(:last-child)]:border-r"
-            >
-              <role.icon className="size-[18px] text-ink-2" strokeWidth={1.5} />
-              <h3 className="mt-6 text-[18px] font-medium">{role.title}</h3>
+            <article key={role.title} data-reveal className="border-t border-line pt-6">
+              <role.icon className="size-[18px] text-ink" strokeWidth={1.5} />
+              <h3 className="mt-5 text-[18px] font-medium text-ink">{role.title}</h3>
               <p className="mt-2 text-[15px] leading-[24px] text-ink-2">{role.text}</p>
-              <ul className="tick-list mt-6 grid gap-2.5 border-t border-line pt-6 text-[14px] text-ink-2">
+              <ul className="tick-list mt-6 grid gap-2.5 text-[14px] text-ink-2">
                 {role.points.map((p) => (
                   <li key={p}>{p}</li>
                 ))}

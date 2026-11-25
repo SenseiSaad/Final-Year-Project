@@ -28,6 +28,7 @@ export function HowItWorks({ facts }: { facts: Facts }) {
       <div className="container-page">
         <SectionHead
           id="how-title"
+          textEffect
           title="From a folder of files to answers you can check"
           lead="Three steps, all on your own hardware. Nothing leaves the building unless an administrator turns on cloud chat."
         />

@@ -4,10 +4,10 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { facts } from "@/lib/facts";
 
 export const metadata: Metadata = {
-  title: "Early access dashboard",
-  description: "Test DocuTrust AI with ready-made Admin and Employee accounts.",
+  title: "Workspace",
+  description: "Open DocuTrust AI workspace with Chat, Team chat, Document upload, OKF and Audit log.",
 };
 
 export default function DashboardPage() {
-  return <DashboardShell role="employee" facts={facts} />;
+  return <DashboardShell role="admin" facts={facts} />;
 }

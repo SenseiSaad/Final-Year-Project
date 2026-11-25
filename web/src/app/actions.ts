@@ -8,11 +8,22 @@ export type RequestState = {
 };
 
 const FIELDS = ["name", "email", "organisation", "team_size", "plan", "note", "website"] as const;
-const API = process.env.DJANGO_API_URL ?? "http://127.0.0.1:8300";
+const API =
+  process.env.DJANGO_API_URL ??
+  (process.env.NODE_ENV === "development" ? "http://127.0.0.1:8300" : undefined);
 
 /* Sends the early-access form to the Django backend, which validates and stores it */
 export async function requestAccess(_prev: RequestState, formData: FormData): Promise<RequestState> {
   const values = Object.fromEntries(FIELDS.map((f) => [f, String(formData.get(f) ?? "").trim()]));
+
+  if (!API) {
+    return {
+      status: "error",
+      errors: {},
+      values,
+      message: "Early access is not connected in this deployment yet. Set DJANGO_API_URL to the backend URL.",
+    };
+  }
 
   try {
     const response = await fetch(`${API}/api/early-access/`, {

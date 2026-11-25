@@ -3,11 +3,15 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/core/accordion";
 import type { Facts } from "@/lib/facts";
 
 export function Faq({ facts }: { facts: Facts }) {
-  const [open, setOpen] = useState<number | null>(0);
-
   const items = [
     {
       q: "Do our documents go to the cloud?",
@@ -35,9 +39,11 @@ export function Faq({ facts }: { facts: Facts }) {
     },
     {
       q: "Is DocuTrust ready to use today?",
-      a: "It is in early access. You can open either the Admin or Employee test dashboard directly from this page to try document permissions, citations, attendance and the audit log.",
+      a: "Yes—open the Workspace directly from this page with no login required to test Chat, Team chat, Document upload, OKF pinning and the SHA-256 Audit log.",
     },
   ];
+
+  const [open, setOpen] = useState<string | null>(items[0].q);
 
   return (
     <section id="faq" aria-labelledby="faq-title" className="py-24 md:py-32">
@@ -47,47 +53,32 @@ export function Faq({ facts }: { facts: Facts }) {
             Questions teams ask first
           </h2>
           <p className="mt-4 text-[17px] leading-[28px] text-ink-2">
-            Want to see permissions in action? Open either early-access account above and switch roles in one click.
+            Open the Workspace above to test every feature directly—no account or sign-in needed.
           </p>
         </div>
-        <div data-reveal className="border-t border-line">
-          {items.map((item, i) => {
-            const isOpen = open === i;
-            return (
-              <div key={item.q} className="border-b border-line">
-                <h3>
-                  <button
-                    type="button"
-                    id={`faq-q-${i}`}
-                    aria-expanded={isOpen}
-                    aria-controls={`faq-a-${i}`}
-                    onClick={() => setOpen(isOpen ? null : i)}
-                    className="flex w-full items-center justify-between gap-6 py-5 text-left text-[16px] font-medium text-ink"
-                  >
-                    {item.q}
-                    <Plus
-                      className={`size-[18px] shrink-0 text-ink-3 transition-transform duration-300 ease-[var(--ease-out-soft)] ${
-                        isOpen ? "rotate-45" : ""
-                      }`}
-                      strokeWidth={1.5}
-                    />
-                  </button>
-                </h3>
-                <div
-                  id={`faq-a-${i}`}
-                  role="region"
-                  aria-labelledby={`faq-q-${i}`}
-                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[var(--ease-out-soft)] ${
-                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                  }`}
-                >
-                  <div className="overflow-hidden">
-                    <p className="max-w-[40rem] pb-6 text-[15px] leading-[25px] text-ink-2">{item.a}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+
+        <div data-reveal>
+          <Accordion
+            className="border-t border-line"
+            transition={{ type: "spring", stiffness: 120, damping: 20 }}
+            expandedValue={open}
+            onValueChange={(value) => setOpen(value === null ? null : String(value))}
+          >
+            {items.map((item) => (
+              <AccordionItem key={item.q} value={item.q} className="border-b border-line">
+                <AccordionTrigger className="group flex w-full items-center justify-between gap-6 py-5 text-left text-[16px] font-medium text-ink">
+                  {item.q}
+                  <Plus
+                    className="size-[18px] shrink-0 text-ink-3 transition-transform duration-300 group-data-[expanded]:rotate-45"
+                    strokeWidth={1.5}
+                  />
+                </AccordionTrigger>
+                <AccordionContent className="overflow-hidden">
+                  <p className="max-w-[40rem] pb-6 text-[15px] leading-[25px] text-ink-2">{item.a}</p>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </div>
     </section>

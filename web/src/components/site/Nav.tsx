@@ -2,7 +2,10 @@
 
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactElement } from "react";
+
+import { AnimatedBackground } from "@/components/core/animated-background";
+import { EarlyAccessDialog } from "@/components/landing/EarlyAccessDialog";
 
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -11,7 +14,7 @@ const links = [
   { href: "/#product", label: "Product" },
   { href: "/#how", label: "How it works" },
   { href: "/#security", label: "Security" },
-  { href: "/#pricing", label: "Pricing" },
+  { href: "/#workspace", label: "Workspace" },
   { href: "/#faq", label: "FAQ" },
 ];
 
@@ -29,29 +32,41 @@ export function Nav() {
   return (
     <header
       className={`sticky top-0 z-40 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-line bg-bg/85 backdrop-blur-md" : "border-transparent bg-transparent"
+        scrolled || open ? "border-line bg-bg" : "border-transparent bg-transparent"
       }`}
     >
       <div className="container-page flex h-16 items-center gap-8">
         <Logo />
         <nav aria-label="Main" className="hidden flex-1 items-center gap-1 md:flex">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-lg px-3 py-2 text-[14px] text-ink-2 transition-colors duration-150 hover:text-ink"
-            >
-              {link.label}
-            </Link>
-          ))}
+          <AnimatedBackground
+            defaultValue={links[0].href}
+            className="rounded-lg bg-raised"
+            transition={{ type: "spring", bounce: 0.2, duration: 0.3 }}
+            enableHover
+          >
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                data-id={link.href}
+                className="rounded-lg px-3 py-2 text-[14px] font-medium text-ink-2 transition-colors duration-150 hover:text-ink"
+              >
+                {link.label}
+              </Link>
+            )) as unknown as ReactElement<{ "data-id": string }>[]}
+          </AnimatedBackground>
         </nav>
         <div className="ml-auto flex items-center gap-2 md:ml-0">
           <ThemeToggle />
+          <EarlyAccessDialog
+            label="Join early access"
+            triggerClassName="hidden h-9 items-center rounded-lg border border-line-strong px-3.5 text-[14px] font-medium text-ink transition-colors duration-150 hover:bg-raised lg:inline-flex"
+          />
           <Link
-            href="/#early-access"
+            href="/dashboard"
             className="hidden h-9 items-center rounded-lg bg-btn px-4 text-[14px] font-medium text-on-btn transition-colors duration-150 hover:bg-btn-hover sm:inline-flex"
           >
-            Early access
+            Open workspace
           </Link>
           <button
             type="button"
@@ -77,12 +92,16 @@ export function Nav() {
               {link.label}
             </Link>
           ))}
+          <EarlyAccessDialog
+            label="Join early access"
+            triggerClassName="mt-2 inline-flex h-10 items-center justify-center rounded-lg border border-line-strong px-4 text-[14px] font-medium text-ink"
+          />
           <Link
-            href="/#early-access"
+            href="/dashboard"
             onClick={() => setOpen(false)}
             className="mt-2 inline-flex h-10 items-center justify-center rounded-lg bg-btn px-4 text-[14px] font-medium text-on-btn"
           >
-            Early access
+            Open workspace
           </Link>
         </nav>
       )}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import { requestAccess, type RequestState } from "@/app/actions";
+import { TextMorph } from "@/components/core/text-morph";
 
 const initial: RequestState = { status: "idle", errors: {}, values: {} };
 
@@ -48,7 +49,13 @@ function Field({
   );
 }
 
-export function RequestForm() {
+export function RequestForm({
+  onNameChange,
+  onSuccess,
+}: {
+  onNameChange?: (name: string) => void;
+  onSuccess?: () => void;
+} = {}) {
   const [state, action, pending] = useActionState(requestAccess, initial);
   const [plan, setPlan] = useState("pilot");
   const done = useRef<HTMLDivElement>(null);
@@ -65,8 +72,9 @@ export function RequestForm() {
     if (state.status === "ok" && done.current) {
       done.current.focus();
       gsap.fromTo(done.current, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: "power3.out" });
+      onSuccess?.();
     }
-  }, [state.status]);
+  }, [state.status, onSuccess]);
 
   if (state.status === "ok") {
     return (
@@ -88,7 +96,15 @@ export function RequestForm() {
     <form action={action} noValidate className="grid gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="name" label="Full name" error={e.name}>
-          <input id="name" name="name" autoComplete="name" defaultValue={v.name} className={inputClass} {...err("name")} />
+          <input
+            id="name"
+            name="name"
+            autoComplete="name"
+            defaultValue={v.name}
+            onChange={(event) => onNameChange?.(event.target.value)}
+            className={inputClass}
+            {...err("name")}
+          />
         </Field>
         <Field id="email" label="Work email" error={e.email}>
           <input id="email" name="email" type="email" autoComplete="email" defaultValue={v.email} className={inputClass} {...err("email")} />
@@ -170,7 +186,7 @@ export function RequestForm() {
           className="inline-flex h-11 items-center justify-center gap-2 rounded-[10px] bg-btn px-5 text-[15px] font-medium text-on-btn transition-[background-color,transform,opacity] duration-150 hover:bg-btn-hover active:scale-[0.98] disabled:opacity-70"
         >
           {pending && <LoaderCircle className="size-4 animate-spin" strokeWidth={1.5} />}
-          {pending ? "Sending" : "Send request"}
+          <TextMorph as="span">{pending ? "Sending…" : "Send request"}</TextMorph>
         </button>
       </div>
       {state.message && (

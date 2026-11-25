@@ -1,10 +1,30 @@
-export function SectionHead({ id, title, lead }: { id: string; title: string; lead?: string }) {
+import { TextEffect } from "@/components/core/text-effect";
+
+type SectionHeadProps = {
+  id: string;
+  title: string;
+  lead?: string;
+  /** Fade the title in character by character as the section enters. */
+  textEffect?: boolean;
+};
+
+export function SectionHead({ id, title, lead, textEffect = false }: SectionHeadProps) {
   return (
-    <div data-reveal className="max-w-[40rem]">
-      <h2 id={id} className="heading">
-        {title}
+    <div data-reveal={textEffect ? undefined : ""} className="max-w-[40rem]">
+      <h2 id={id} className="heading" aria-label={textEffect ? title : undefined}>
+        {textEffect ? (
+          <TextEffect per="char" preset="fade" delay={0.05} stagger={0.012}>
+            {title}
+          </TextEffect>
+        ) : (
+          title
+        )}
       </h2>
-      {lead && <p className="mt-4 text-[17px] leading-[28px] text-ink-2">{lead}</p>}
+      {lead && (
+        <p data-reveal={textEffect ? "" : undefined} className="mt-4 text-[17px] leading-[28px] text-ink-2">
+          {lead}
+        </p>
+      )}
     </div>
   );
 }

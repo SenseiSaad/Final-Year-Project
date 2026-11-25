@@ -26,7 +26,7 @@ export function ProductTour({ facts }: { facts: Facts }) {
 
   useGSAP(
     () => {
-      gsap.fromTo(panel.current, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: "power3.out" });
+      gsap.fromTo(panel.current, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.38, ease: "power3.out" });
     },
     { dependencies: [active], scope: panel },
   );
@@ -41,7 +41,7 @@ export function ProductTour({ facts }: { facts: Facts }) {
   }
 
   return (
-    <div data-reveal className="mt-14 grid gap-6 lg:grid-cols-[300px_1fr] lg:gap-10">
+    <div data-reveal className="mt-14 grid gap-10 lg:grid-cols-[290px_1fr] lg:gap-12">
       <div role="tablist" aria-label="Product tour" aria-orientation="vertical" onKeyDown={onKey} className="grid content-start gap-1">
         {tabs.map((tab, i) => {
           const selected = i === active;
@@ -57,13 +57,13 @@ export function ProductTour({ facts }: { facts: Facts }) {
               aria-selected={selected}
               tabIndex={selected ? 0 : -1}
               onClick={() => setActive(i)}
-              className={`relative rounded-xl px-4 py-3.5 text-left transition-colors duration-200 ${
-                selected ? "bg-surface shadow-[0_0_0_1px_var(--line)]" : "hover:bg-surface/60"
+              className={`relative py-3.5 pl-4 pr-3 text-left transition-colors duration-150 ${
+                selected ? "text-ink" : "text-ink-3 hover:text-ink"
               }`}
             >
               <span
                 aria-hidden="true"
-                className={`absolute inset-y-3 left-0 w-0.5 rounded-full bg-accent transition-opacity duration-200 ${
+                className={`absolute inset-y-2.5 left-0 w-[2px] bg-ink transition-opacity duration-150 ${
                   selected ? "opacity-100" : "opacity-0"
                 }`}
               />
@@ -74,24 +74,18 @@ export function ProductTour({ facts }: { facts: Facts }) {
         })}
       </div>
 
-      <div className="min-h-[480px] overflow-hidden rounded-2xl border border-line bg-surface shadow-window">
-        <div className="flex h-11 items-center justify-between border-b border-line px-5">
-          <span className="text-[13px] font-medium">{tabs[active].title}</span>
-          <span className="font-mono text-[12px] text-ink-3">sample workspace</span>
-        </div>
-        <div
-          ref={panel}
-          role="tabpanel"
-          id={`panel-${tabs[active].id}`}
-          aria-labelledby={`tab-${tabs[active].id}`}
-          tabIndex={0}
-          className="p-5 sm:p-6"
-        >
-          {active === 0 && <SearchDemo facts={facts} />}
-          {active === 1 && <RefuseDemo facts={facts} />}
-          {active === 2 && <AccessDemo />}
-          {active === 3 && <LedgerDemo />}
-        </div>
+      <div
+        ref={panel}
+        role="tabpanel"
+        id={`panel-${tabs[active].id}`}
+        aria-labelledby={`tab-${tabs[active].id}`}
+        tabIndex={0}
+        className="min-h-[420px] border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0"
+      >
+        {active === 0 && <SearchDemo facts={facts} />}
+        {active === 1 && <RefuseDemo facts={facts} />}
+        {active === 2 && <AccessDemo />}
+        {active === 3 && <LedgerDemo />}
       </div>
     </div>
   );

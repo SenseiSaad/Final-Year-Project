@@ -2,8 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 
-import { Footer } from "@/components/site/Footer";
-import { Nav } from "@/components/site/Nav";
+import { SiteChrome } from "@/components/site/SiteChrome";
 import "./globals.css";
 
 const plex = localFont({
@@ -14,12 +13,6 @@ const plex = localFont({
     { path: "./fonts/ibm-plex-sans-latin-500-normal.woff2", weight: "500", style: "normal" },
     { path: "./fonts/ibm-plex-sans-latin-600-normal.woff2", weight: "600", style: "normal" },
   ],
-});
-
-const plexMono = localFont({
-  variable: "--font-plex-mono",
-  display: "swap",
-  src: [{ path: "./fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" }],
 });
 
 const newsreader = localFont({
@@ -37,14 +30,14 @@ export const metadata: Metadata = {
     template: "%s · DocuTrust AI",
   },
   description:
-    "DocuTrust AI answers questions from your team's own documents, only from files each person may open, with the source passage attached. Runs on your own machine.",
+    "DocuTrust AI answers questions from your team's own documents, only from files each person may open, with the source attached. Runs on your own machine.",
   icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f7fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0d14" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#121212" },
   ],
 };
 
@@ -56,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plex.variable} ${plexMono.variable} ${newsreader.variable}`}
+      className={`${plex.variable} ${newsreader.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: motionGate }} />
@@ -69,11 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           >
             Skip to content
           </a>
-          <Nav />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <Footer />
+          <SiteChrome>{children}</SiteChrome>
         </ThemeProvider>
       </body>
     </html>

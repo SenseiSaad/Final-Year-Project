@@ -4,56 +4,56 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
-  Design tokens. One ink-tinted neutral ramp, one teal-green accent.
-  Light values first, dark values override them.
+  Design tokens: strictly 2 colors — plain matte black and crisp white.
+  Light values first (white surface / matte black ink), dark values invert them.
 */
 :root {
-  --bg: #f5f7fa;
-  --deep: #eceff4;
+  --bg: #ffffff;
+  --deep: #f5f5f5;
   --surface: #ffffff;
-  --raised: #eef1f5;
-  --line: rgb(17 24 39 / 0.08);
-  --line-strong: rgb(17 24 39 / 0.14);
-  --ink: #111827;
-  --ink-2: #4b5565;
-  --ink-3: #6b7385;
-  --accent: #0f7a5f;
-  --accent-ink: #0d6e55;
-  --accent-soft: rgb(15 122 95 / 0.1);
-  --accent-line: rgb(15 122 95 / 0.35);
+  --raised: #efefef;
+  --line: rgb(18 18 18 / 0.11);
+  --line-strong: rgb(18 18 18 / 0.22);
+  --ink: #121212;
+  --ink-2: #363636;
+  --ink-3: #595959;
+  --accent: #121212;
+  --accent-ink: #121212;
+  --accent-soft: rgb(18 18 18 / 0.08);
+  --accent-line: rgb(18 18 18 / 0.28);
   --on-accent: #ffffff;
-  --btn: #0f6e56;
-  --btn-hover: #0c5f4a;
+  --btn: #121212;
+  --btn-hover: #262626;
   --on-btn: #ffffff;
-  --danger: #b42318;
-  --danger-soft: rgb(180 35 24 / 0.08);
-  --shadow: 0 1px 2px rgb(17 24 39 / 0.04), 0 12px 32px -12px rgb(17 24 39 / 0.14);
-  --hero-light: rgb(255 255 255 / 0.9);
+  --danger: #121212;
+  --danger-soft: rgb(18 18 18 / 0.10);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 10px 28px -12px rgb(0 0 0 / 0.12);
+  --hero-light: rgb(255 255 255 / 0);
   color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --bg: #0b0d14;
-  --deep: #07080d;
-  --surface: #11141c;
-  --raised: #1a1e28;
-  --line: rgb(238 240 245 / 0.08);
-  --line-strong: rgb(238 240 245 / 0.14);
-  --ink: #eef0f5;
-  --ink-2: #a3a9b8;
-  --ink-3: #7a8296;
-  --accent: #4fd1a5;
-  --accent-ink: #5fdcb0;
-  --accent-soft: rgb(79 209 165 / 0.1);
-  --accent-line: rgb(79 209 165 / 0.35);
-  --on-accent: #05140e;
-  --btn: #eef0f5;
+  --bg: #121212;
+  --deep: #0c0c0c;
+  --surface: #181818;
+  --raised: #242424;
+  --line: rgb(255 255 255 / 0.11);
+  --line-strong: rgb(255 255 255 / 0.22);
+  --ink: #f5f5f5;
+  --ink-2: #d6d6d6;
+  --ink-3: #a3a3a3;
+  --accent: #f5f5f5;
+  --accent-ink: #f5f5f5;
+  --accent-soft: rgb(255 255 255 / 0.10);
+  --accent-line: rgb(255 255 255 / 0.28);
+  --on-accent: #121212;
+  --btn: #f5f5f5;
   --btn-hover: #ffffff;
-  --on-btn: #0b0d14;
-  --danger: #f08a8a;
-  --danger-soft: rgb(240 138 138 / 0.1);
-  --shadow: 0 24px 64px -24px rgb(0 0 0 / 0.6);
-  --hero-light: rgb(28 34 50 / 0.9);
+  --on-btn: #121212;
+  --danger: #f5f5f5;
+  --danger-soft: rgb(255 255 255 / 0.12);
+  --shadow: 0 16px 40px -16px rgb(0 0 0 / 0.65);
+  --hero-light: rgb(255 255 255 / 0);
   color-scheme: dark;
 }
 
@@ -78,8 +78,9 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
 
-  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  /* Clean, visible professional sans-serif everywhere — no terminal monospace */
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-plex), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-serif: var(--font-newsreader), Georgia, serif;
 
   --shadow-window: var(--shadow);
@@ -149,21 +150,22 @@
     }
   }
 
-  /* The signature detail: a source citation tag, used wherever a source is named */
+  /* Clean monochrome source tag using the primary sans-serif font */
   .cite {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 22px;
-    padding-inline: 8px;
+    height: 24px;
+    padding-inline: 10px;
     border-radius: 6px;
-    font-family: var(--font-mono);
-    font-size: 12px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
     line-height: 1;
     white-space: nowrap;
-    color: var(--accent-ink);
-    background: var(--accent-soft);
-    border: 1px solid transparent;
+    color: var(--ink);
+    background: var(--raised);
+    border: 1px solid var(--line-strong);
     vertical-align: 1px;
     transition:
       background-color 160ms var(--ease-out-soft),
@@ -171,26 +173,27 @@
       color 160ms var(--ease-out-soft);
   }
   button.cite:hover {
-    border-color: var(--accent-line);
+    border-color: var(--ink);
   }
   .cite[aria-pressed="true"] {
     background: var(--accent);
     color: var(--on-accent);
+    border-color: var(--accent);
   }
 
   .keycap {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
-    height: 24px;
-    padding-inline: 6px;
+    min-width: 26px;
+    height: 26px;
+    padding-inline: 7px;
     border-radius: 6px;
     border: 1px solid var(--line-strong);
-    border-bottom-width: 2px;
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: 12px;
+    color: var(--ink-2);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
   }
 
   .tick-list li {
@@ -273,7 +276,8 @@
 
 /* Elements that GSAP animates in start hidden only when scripts run */
 .js-motion [data-reveal],
-.js-motion [data-hero] {
+.js-motion [data-hero],
+.js-motion [data-text-effect] {
   visibility: hidden;
 }
 
@@ -282,7 +286,8 @@
     scroll-behavior: auto;
   }
   .js-motion [data-reveal],
-  .js-motion [data-hero] {
+  .js-motion [data-hero],
+  .js-motion [data-text-effect] {
     visibility: visible;
   }
 }

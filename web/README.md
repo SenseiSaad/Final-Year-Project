@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DocuTrust AI — web
 
-## Getting Started
+Next.js 16 public site for DocuTrust: landing page, interactive demo workspace for the admin and employee roles, privacy and terms.
 
-First, run the development server:
+The dashboards run entirely in the browser with sample data. No real documents, accounts or personal data are served.
+
+## Local development
+
+Prerequisites: Node 20.9 or newer.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # optional; sets DJANGO_API_URL for the early-access form
+npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://127.0.0.1:3100>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The early-access form posts to the Django API at `DJANGO_API_URL`. If it is not set, the site still runs and the form explains that the connection is not configured.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Development server (use `-- --port 3100`) |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint |
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push the repository to GitHub.
+2. In Vercel, choose **Add New Project** and import the repository.
+3. Set **Root Directory** to `web`.
+4. Framework preset: **Next.js**; build command `npm run build`; output `.next`.
+5. Add the environment variable `DJANGO_API_URL` with the public URL of the Django backend.
+6. Deploy.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Without `DJANGO_API_URL`, every page deploys and works; only the early-access form reports that it is not connected. The Python backend is not deployable as a Vercel serverless function as written.
 
-## Deploy on Vercel
+## Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```text
+src/app/                  routes: /, /dashboard, /dashboard/admin, /dashboard/employee, /privacy, /terms
+src/components/landing/   marketing sections, early-access dialog and form
+src/components/dashboard/ demo workspace views and data
+src/components/site/      nav, footer, logo, theme toggle
+src/components/core/      motion components: text effect, text morph, text scramble, text shimmer,
+                          animated number, accordion, dialog, morphing popover, transition panel
+src/lib/                  facts, sample data, small utilities
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Environment
+
+`.env.local` and `.env` are ignored by git. Only `.env.example` is tracked.

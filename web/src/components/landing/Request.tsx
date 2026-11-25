@@ -1,6 +1,8 @@
 import { ArrowRight, KeyRound, User } from "lucide-react";
 import Link from "next/link";
 
+import { EarlyAccessDialog } from "./EarlyAccessDialog";
+
 const accounts = [
   {
     href: "/dashboard/admin",
@@ -8,11 +10,12 @@ const accounts = [
     badge: "Highest permission",
     title: "Admin account",
     identity: "Administrator · All departments",
-    description: "Inspect every document across Finance, HR and Operations, manage user accounts, view today's attendance code and verify the SHA-256 audit ledger.",
+    description:
+      "Inspect every document across Finance, HR and Operations, pin OKF policies, use all team channels, manage users and verify the SHA-256 audit log.",
     points: [
-      "All 6 sample documents visible in Ask and search",
-      "Daily attendance code, monthly summary and strike review",
-      "User management and tamper-evident audit log",
+      "All workspace documents visible in Chat and search",
+      "Pin and unpin OKF guidance across the company",
+      "Team chat, user management and tamper-evident audit log",
     ],
     cta: "Open Admin dashboard",
     primary: true,
@@ -23,11 +26,12 @@ const accounts = [
     badge: "Average permission",
     title: "Employee account",
     identity: "Ayesha Khan · Finance",
-    description: "Test standard day-to-day permissions: ask across Finance and shared files only, see private HR files refused before ranking, and check in for attendance.",
+    description:
+      "Test standard day-to-day permissions: ask across Finance and shared files only, upload documents, message team channels and see private HR files refused.",
     points: [
-      "Only Finance and shared documents appear in search",
+      "Only Finance and shared documents appear in Chat",
       "Private HR and Operations files are refused honestly",
-      "Daily 6-digit attendance check-in and private sharing",
+      "Document upload, private sharing and team chat",
     ],
     cta: "Open Employee dashboard",
     primary: false,
@@ -36,7 +40,7 @@ const accounts = [
 
 export function Request() {
   return (
-    <section id="early-access" aria-labelledby="early-access-title" className="border-y border-line bg-deep/60 py-24 md:py-32">
+    <section id="early-access" aria-labelledby="early-access-title" className="border-y border-line bg-deep py-24 md:py-32">
       <div className="container-page">
         <div data-reveal className="max-w-[42rem]">
           <h2 id="early-access-title" className="heading">
@@ -46,6 +50,13 @@ export function Request() {
             No sign-up form required. Pick a ready-made test account below to open the workspace in one click and compare
             what each permission level can see.
           </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <EarlyAccessDialog
+              label="Join the early-access list"
+              triggerClassName="inline-flex h-10 items-center rounded-[10px] bg-btn px-4 text-[14px] font-medium text-on-btn transition-colors duration-150 hover:bg-btn-hover"
+            />
+            <span className="text-[13px] text-ink-3">or open a ready-made account below</span>
+          </div>
         </div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-2">
@@ -54,7 +65,7 @@ export function Request() {
               key={acc.href}
               data-reveal
               className={`flex flex-col rounded-2xl border bg-surface p-6 shadow-window sm:p-8 ${
-                acc.primary ? "border-accent-line" : "border-line"
+                acc.primary ? "border-line-strong" : "border-line"
               }`}
             >
               <div className="flex items-center justify-between gap-4">
@@ -64,10 +75,12 @@ export function Request() {
                   </span>
                   <div>
                     <h3 className="text-[18px] font-medium text-ink">{acc.title}</h3>
-                    <p className="font-mono text-[12px] text-ink-3">{acc.identity}</p>
+                    <p className="text-[13px] text-ink-3">{acc.identity}</p>
                   </div>
                 </div>
-                <span className="rounded-md bg-accent-soft px-2 py-0.5 text-[12px] text-accent-ink">{acc.badge}</span>
+                <span className="rounded-md border border-line bg-raised px-2.5 py-1 text-[12px] font-medium text-ink">
+                  {acc.badge}
+                </span>
               </div>
 
               <p className="mt-5 text-[15px] leading-[24px] text-ink-2">{acc.description}</p>

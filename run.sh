@@ -43,7 +43,7 @@ fi
 port_busy() {
   (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null
 }
-for port in 8300 3000; do
+for port in 8300 3100; do
   if port_busy "$port"; then
     echo "Port $port is already in use. Stop the program using it, then run ./run.sh again."
     echo "  Find it with: lsof -i :$port"
@@ -59,9 +59,9 @@ DJANGO_PID=$!
 trap 'pkill -P "$DJANGO_PID" 2>/dev/null; kill "$DJANGO_PID" 2>/dev/null' EXIT INT TERM
 
 echo ""
-echo "  Website:  http://localhost:3000"
+echo "  Website:  http://127.0.0.1:3100"
 echo "  Admin:    http://127.0.0.1:8300/admin/"
 echo ""
 
 # The Next.js website runs in the foreground; Ctrl+C stops both servers
-npm --prefix web run dev -- --hostname 127.0.0.1 --port 3000
+npm --prefix web run dev -- --hostname 127.0.0.1 --port 3100

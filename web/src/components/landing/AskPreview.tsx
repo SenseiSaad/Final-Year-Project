@@ -1,6 +1,6 @@
 "use client";
 
-import { CornerDownLeft, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Mark } from "@/components/site/Logo";
@@ -28,7 +28,7 @@ function uniqueFiles(sources: Record<string, unknown>): string[] {
   return Array.from(seen);
 }
 
-export function AskPreview({ startDelay = 1100 }: { startDelay?: number }) {
+export function AskPreview({ startDelay = 900 }: { startDelay?: number }) {
   const reduce = useReducedMotion();
   const [sampleIndex, setSampleIndex] = useState(0);
   const [typed, setTyped] = useState(0);
@@ -57,17 +57,17 @@ export function AskPreview({ startDelay = 1100 }: { startDelay?: number }) {
     firstRun.current = false;
     let t = delay;
     for (let i = 1; i <= sample.question.length; i++) {
-      t += 22;
+      t += 20;
       later(() => setTyped(i), t);
     }
-    later(() => setPhase("thinking"), (t += 200));
-    t += 700;
+    later(() => setPhase("thinking"), (t += 180));
+    t += 620;
     later(() => setPhase("streaming"), t);
     words.forEach((_, i) => {
-      t += 42;
+      t += 38;
       later(() => setShown(i + 1), t);
     });
-    later(() => setPhase("done"), (t += 120));
+    later(() => setPhase("done"), (t += 100));
     return () => timers.forEach(clearTimeout);
   }, [sample, words, reduce, startDelay]);
 
@@ -80,69 +80,10 @@ export function AskPreview({ startDelay = 1100 }: { startDelay?: number }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-window">
-      {/* Window bar */}
-      <div className="flex h-11 items-center border-b border-line px-5">
-        <span className="text-[13px] font-medium text-ink">Ask</span>
-      </div>
-
-      {/* Single-column thread: Question -> Full Answer -> Source files beneath */}
-      <div className="min-h-[260px] space-y-5 p-5" aria-live="polite">
-        {/* 1. Question */}
-        <div className="flex gap-3">
-          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-raised font-mono text-[11px] text-ink-2" aria-hidden="true">
-            AK
-          </span>
-          <p className="pt-1 text-[14px] leading-[22px] text-ink">
-            {sample.question.slice(0, typed)}
-            {phase === "typing" && typed < sample.question.length && (
-              <span className="ml-px inline-block h-4 w-px translate-y-[3px] bg-ink-2" aria-hidden="true" />
-            )}
-          </p>
-        </div>
-
-        {/* 2. Answer */}
-        <div className="flex gap-3">
-          <Mark className="size-7 shrink-0" />
-          <div className="min-w-0 flex-1 pt-1">
-            {phase === "thinking" && (
-              <p className="font-mono text-[12px] leading-[22px] text-ink-3">Searching documents you can open</p>
-            )}
-            {(phase === "streaming" || phase === "done") && (
-              <p className="text-[14px] leading-[24px] text-ink-2">{words.slice(0, shown).join("")}</p>
-            )}
-
-            {/* 3. Source files beneath (filename + extension only) */}
-            {phase === "done" && (
-              <div
-                className="mt-4 flex flex-wrap items-center gap-2 animate-[fade-up_320ms_var(--ease-out-soft)]"
-                aria-label="Source files"
-              >
-                {files.map((file) => (
-                  <span
-                    key={file}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-bg/60 px-2.5 py-1 font-mono text-[12px] text-ink-2"
-                  >
-                    <FileText className="size-3.5 shrink-0 text-accent-ink" strokeWidth={1.5} aria-hidden="true" />
-                    {file}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <p
-              className={`mt-3 font-mono text-[12px] text-ink-3 transition-opacity duration-300 ${
-                phase === "done" ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              {sample.meta}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Input */}
-      <div className="flex items-center gap-3 border-t border-line px-4 py-3">
+    <div className="border-y border-line-strong py-6">
+      {/* Top strip: language switcher without boxed chrome */}
+      <div className="flex items-center justify-between gap-4 pb-5">
+        <span className="text-[13px] font-semibold text-ink">Ask</span>
         <div className="flex gap-1" role="group" aria-label="Sample question">
           {askSamples.map((s, i) => (
             <button
@@ -150,18 +91,66 @@ export function AskPreview({ startDelay = 1100 }: { startDelay?: number }) {
               type="button"
               onClick={() => pick(i)}
               aria-pressed={i === sampleIndex}
-              className={`h-7 rounded-md px-2.5 text-[12px] transition-colors duration-150 ${
-                i === sampleIndex ? "bg-raised text-ink" : "text-ink-3 hover:text-ink"
+              className={`h-7 rounded-md px-2.5 text-[13px] font-medium transition-colors duration-150 ${
+                i === sampleIndex ? "bg-btn text-on-btn" : "text-ink-3 hover:text-ink"
               }`}
             >
               {s.label}
             </button>
           ))}
         </div>
-        <span className="hidden flex-1 truncate text-[13px] text-ink-3 sm:block">Ask in English or Roman Urdu</span>
-        <span className="keycap ml-auto" aria-hidden="true">
-          <CornerDownLeft className="size-3.5" strokeWidth={1.5} />
-        </span>
+      </div>
+
+      {/* Open vertical flow: Question -> Full Answer -> Source files beneath */}
+      <div className="min-h-[224px] space-y-5 border-t border-line pt-5" aria-live="polite">
+        <div className="flex gap-3">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-raised text-[12px] font-medium text-ink" aria-hidden="true">
+            AK
+          </span>
+          <p className="pt-0.5 text-[15px] font-medium leading-[23px] text-ink">
+            {sample.question.slice(0, typed)}
+            {phase === "typing" && typed < sample.question.length && (
+              <span className="ml-px inline-block h-4 w-px translate-y-[3px] bg-ink" aria-hidden="true" />
+            )}
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <Mark className="size-7 shrink-0" />
+          <div className="min-w-0 flex-1 pt-0.5">
+            {phase === "thinking" && (
+              <p className="text-[14px] leading-[22px] text-ink-3">Searching documents you can open…</p>
+            )}
+            {(phase === "streaming" || phase === "done") && (
+              <p className="text-[15px] leading-[25px] text-ink-2">{words.slice(0, shown).join("")}</p>
+            )}
+
+            {phase === "done" && (
+              <div
+                className="mt-4 flex flex-wrap items-center gap-3 animate-[fade-up_260ms_var(--ease-out-soft)]"
+                aria-label="Source files"
+              >
+                {files.map((file) => (
+                  <span
+                    key={file}
+                    className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink"
+                  >
+                    <FileText className="size-3.5 shrink-0 text-ink-3" strokeWidth={1.5} aria-hidden="true" />
+                    {file}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <p
+              className={`mt-3 text-[13px] text-ink-3 transition-opacity duration-300 ${
+                phase === "done" ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {sample.meta}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
