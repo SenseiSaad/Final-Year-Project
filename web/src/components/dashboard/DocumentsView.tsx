@@ -1,214 +1,443 @@
 "use client";
 
-import { FileText, Pin, Trash2, UploadCloud } from "lucide-react";
-import { useRef, useState } from "react";
+import { CheckIcon, FileTextIcon, FileWarningIcon, RefreshCwIcon, XIcon } from "lucide-react";
+import { FileText, Search, Trash2, UploadCloud } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 
-import type { Facts } from "@/lib/facts";
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+} from "@/components/ui/attachment";
+import { Spinner } from "@/components/ui/spinner";
+import { useResource } from "@/hooks/useResource";
+import {
+  downloadDocument,
+  errorMessage,
+  formatBytes,
+  formatDateTime,
+  uploadRequest,
+  type DocumentItem,
+  type SearchHit,
+} from "@/lib/workspace-api";
 
-import type { DocVisibility, RoleProfile, WorkspaceDoc } from "./dashboardData";
-import { FileSearch } from "./FileSearch";
+import { AccessFields, emptyAccess, type AccessValue } from "./AccessFields";
+import { btnGhost, btnPrimary, btnSecondary, ConfirmModal, EmptyState, ErrorNote, inputClass, Modal, SkeletonRows } from "./ui";
+import { useWorkspace } from "./WorkspaceContext";
 
-type Props = {
-  isAdmin: boolean;
-  profile: RoleProfile;
-  facts: Facts;
-  docs: WorkspaceDoc[];
-  visibleDocs: WorkspaceDoc[];
-  pinnedOkfCount: number;
-  okfNotice: string;
-  onUploadFile: (file: File, visibility: DocVisibility) => void;
-  onToggleOkf: (id: string) => void;
-  onToggleShare: (id: string) => void;
-  onDeleteDoc: (id: string) => void;
-};
+type UploadState = "uploading" | "processing" | "error" | "done";
+type UploadItem = { id: string; file: File; access: AccessValue; state: UploadState; detail: string };
 
-export function DocumentsView({
-  isAdmin,
-  profile,
-  facts,
-  docs,
-  visibleDocs,
-  pinnedOkfCount,
-  okfNotice,
-  onUploadFile,
-  onToggleOkf,
-  onToggleShare,
-  onDeleteDoc,
-}: Props) {
-  const [visibility, setVisibility] = useState<DocVisibility>(isAdmin ? "Everyone" : "Department");
-  const [query, setQuery] = useState("");
+function accessPayload(access: AccessValue, manage: boolean) {
+  const form: Record<string, string> = { access_mode: access.mode };
+  if (manage) {
+    form.department_id = access.mode === "rbac" ? access.departmentId : "";
+    form.grants = JSON.stringify(
+      access.mode === "scope" ? { roles: access.roles, departments: access.departments, personas: access.personas } : {},
+    );
+  }
+  return form;
+}
+
+export function DocumentsView() {
+  const { boot, request, persona } = useWorkspace();
+  const b = boot!;
+  const [access, setAccess] = useState<AccessValue>(() => emptyAccess(b));
+  const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [dragOver, setDragOver] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState("");
+  const [filter, setFilter] = useState("");
+  const [hits, setHits] = useState<{ query: string; results: SearchHit[] } | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<DocumentItem | null>(null);
+  const [removing, setRemoving] = useState<DocumentItem | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const filtered = visibleDocs.filter((d) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return d.name.toLowerCase().includes(q) || d.department.toLowerCase().includes(q) || d.owner.toLowerCase().includes(q);
-  });
+  const load = useCallback(
+    (signal: AbortSignal) => request<{ documents: DocumentItem[] }>("/documents/", { signal }).then((r) => r.documents),
+    [request],
+  );
+  const library = useResource(load);
+  const manage = b.capabilities.upload_scope;
+  const maxBytes = b.limits.max_upload_bytes;
+  const accepted = b.limits.extensions.join(",");
 
-  function processFiles(list: FileList | null) {
-    if (!list || list.length === 0) return;
-    const file = list[0];
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!["txt", "md", "pdf", "docx"].includes(ext)) {
-      setUploadStatus("Unsupported file type. Use .txt, .md, .pdf or .docx.");
-      return;
+  function patch(id: string, update: Partial<UploadItem>) {
+    setUploads((prev) => prev.map((item) => (item.id === id ? { ...item, ...update } : item)));
+  }
+
+  const run = useCallback(
+    async (item: UploadItem) => {
+      const form = new FormData();
+      form.append("file", item.file);
+      Object.entries(accessPayload(item.access, manage)).forEach(([key, value]) => form.append(key, value));
+      patch(item.id, { state: "uploading", detail: "Uploading · 0%" });
+      try {
+        await uploadRequest("/documents/", persona, form, (fraction) => patch(item.id, { detail: `Uploading · ${Math.round(fraction * 100)}%` }), () =>
+          patch(item.id, { state: "processing", detail: "Extracting text and indexing" }),
+        );
+        patch(item.id, { state: "done", detail: `Ready · ${formatBytes(item.file.size)}` });
+        library.reload();
+      } catch (error) {
+        patch(item.id, { state: "error", detail: errorMessage(error) });
+      }
+    },
+    [manage, persona, library],
+  );
+
+  function addFiles(list: FileList | null) {
+    if (!list) return;
+    const added: UploadItem[] = [];
+    Array.from(list).forEach((file) => {
+      const ext = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const base = { id, file, access: { ...access } };
+      if (!b.limits.extensions.includes(ext)) {
+        added.push({ ...base, state: "error", detail: "Unsupported type. Use PDF, DOCX, Markdown or TXT." });
+      } else if (file.size > maxBytes) {
+        added.push({ ...base, state: "error", detail: `Larger than the ${formatBytes(maxBytes)} limit.` });
+      } else {
+        added.push({ ...base, state: "uploading", detail: "Uploading · 0%" });
+      }
+    });
+    setUploads((prev) => [...added, ...prev]);
+    added.filter((item) => item.state === "uploading").forEach((item) => void run(item));
+  }
+
+  async function searchContents() {
+    const query = filter.trim();
+    if (!query) return;
+    setSearching(true);
+    setSearchError(null);
+    try {
+      const result = await request<{ query: string; results: SearchHit[] }>(`/documents/?q=${encodeURIComponent(query)}`);
+      setHits({ query: result.query, results: result.results });
+    } catch (error) {
+      setSearchError(errorMessage(error));
+    } finally {
+      setSearching(false);
     }
-    if (file.size > facts.maxFileMb * 1024 * 1024) {
-      setUploadStatus(`File exceeds ${facts.maxFileMb} MB limit.`);
-      return;
+  }
+
+  async function remove() {
+    if (!removing) return;
+    try {
+      await request(`/documents/${removing.id}/`, { method: "DELETE" });
+      setRemoving(null);
+      setActionError(null);
+      library.reload();
+    } catch (error) {
+      setActionError(errorMessage(error));
     }
-    onUploadFile(file, visibility);
-    setUploadStatus(`Indexed ${file.name} (${visibility}).`);
+  }
+
+  const needle = filter.trim().toLowerCase();
+  const docs = (library.data ?? []).filter(
+    (doc) =>
+      !needle ||
+      [doc.title, doc.filename, doc.owner, doc.access_summary, doc.department?.name ?? ""].some((text) => text.toLowerCase().includes(needle)),
+  );
+
+  return (
+    <div className="mx-auto w-full max-w-[1000px] space-y-8 pb-8">
+      <section aria-labelledby="upload-title">
+        <h2 id="upload-title" className="text-[16px] font-semibold">
+          Upload documents
+        </h2>
+        <div className="mt-3 grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragOver(false);
+              addFiles(event.dataTransfer.files);
+            }}
+            className={`flex min-h-44 flex-col items-center justify-center gap-3 rounded-xl border border-dashed px-5 py-8 text-center transition-colors ${
+              dragOver ? "border-ink bg-raised" : "border-line-strong bg-deep/50"
+            }`}
+          >
+            <UploadCloud className="size-6 text-ink-2" strokeWidth={1.5} />
+            <div>
+              <p className="text-[15px] font-medium">Drop files here</p>
+              <p className="mt-0.5 text-[13px] text-ink-3">
+                PDF, DOCX, Markdown or TXT · up to {formatBytes(maxBytes)} each
+              </p>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              accept={accepted}
+              className="sr-only"
+              aria-label="Choose files to upload"
+              onChange={(event) => {
+                addFiles(event.target.files);
+                event.target.value = "";
+              }}
+            />
+            <button type="button" onClick={() => fileRef.current?.click()} className={btnPrimary}>
+              Choose files
+            </button>
+          </div>
+
+          <div>
+            <AccessFields boot={b} value={access} onChange={setAccess} idPrefix="upload" />
+          </div>
+        </div>
+
+        {uploads.length > 0 && (
+          <ul className="mt-4 grid gap-2" aria-label="Uploads">
+            {uploads.map((item) => (
+              <li key={item.id}>
+                <Attachment state={item.state} className="w-full max-w-[34rem]">
+                  <AttachmentMedia>
+                    {item.state === "uploading" && <Spinner />}
+                    {item.state === "processing" && <FileTextIcon />}
+                    {item.state === "error" && <FileWarningIcon />}
+                    {item.state === "done" && <CheckIcon />}
+                  </AttachmentMedia>
+                  <AttachmentContent>
+                    <AttachmentTitle>{item.file.name}</AttachmentTitle>
+                    <AttachmentDescription>{item.detail}</AttachmentDescription>
+                  </AttachmentContent>
+                  <AttachmentActions>
+                    {item.state === "error" && b.limits.extensions.includes(`.${item.file.name.split(".").pop()?.toLowerCase()}`) && item.file.size <= maxBytes && (
+                      <AttachmentAction aria-label={`Retry ${item.file.name}`} onClick={() => void run(item)}>
+                        <RefreshCwIcon />
+                      </AttachmentAction>
+                    )}
+                    <AttachmentAction
+                      aria-label={`Dismiss ${item.file.name}`}
+                      onClick={() => setUploads((prev) => prev.filter((u) => u.id !== item.id))}
+                    >
+                      <XIcon />
+                    </AttachmentAction>
+                  </AttachmentActions>
+                </Attachment>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="library-title">
+        <div className="flex flex-wrap items-end justify-between gap-3 pb-3">
+          <div>
+            <h2 id="library-title" className="text-[16px] font-semibold">
+              Library
+            </h2>
+            <p className="text-[13px] text-ink-3">
+              {library.data ? `${library.data.length} ${library.data.length === 1 ? "document" : "documents"} this persona can open` : "Loading…"}
+            </p>
+          </div>
+          <form
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void searchContents();
+            }}
+            className="flex w-full gap-2 sm:w-auto"
+          >
+            <div className="relative min-w-0 flex-1 sm:w-72">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" strokeWidth={1.5} />
+              <input
+                type="search"
+                value={filter}
+                onChange={(event) => {
+                  setFilter(event.target.value);
+                  setHits(null);
+                }}
+                aria-label="Search documents"
+                placeholder="Filter, or search inside files"
+                className={`${inputClass} pl-9`}
+              />
+            </div>
+            <button type="submit" disabled={!filter.trim() || searching} className={btnSecondary}>
+              {searching ? "Searching…" : "Search inside"}
+            </button>
+          </form>
+        </div>
+
+        {searchError && <ErrorNote>{searchError}</ErrorNote>}
+        {hits && (
+          <div className="mb-5 rounded-xl border border-line p-4" role="region" aria-label="Content matches">
+            <p className="text-[13px] font-medium">
+              {hits.results.length ? `Matches inside files for “${hits.query}”` : `Nothing in permitted files matches “${hits.query}”`}
+            </p>
+            <ul className="mt-2 divide-y divide-line">
+              {hits.results.map((hit) => (
+                <li key={hit.document_id} className="py-2.5">
+                  <p className="text-[14px] font-medium">
+                    {hit.title}
+                    {hit.page ? <span className="ml-2 text-[12px] font-normal text-ink-3">p. {hit.page}</span> : null}
+                  </p>
+                  <p className="mt-0.5 text-[13px] leading-[20px] text-ink-2">{hit.snippet}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {library.error && <ErrorNote onRetry={library.reload}>{library.error}</ErrorNote>}
+        {library.loading && !library.data && <SkeletonRows />}
+        {library.data && docs.length === 0 && (
+          <EmptyState title={needle ? "No documents match" : "No documents yet"}>
+            {needle ? "Try a different word, or search inside files." : "Upload a file above. It is indexed as soon as the upload finishes."}
+          </EmptyState>
+        )}
+        {docs.length > 0 && (
+          <ul className="divide-y divide-line border-y border-line">
+            {docs.map((doc) => (
+              <li key={doc.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:gap-4">
+                <FileText className="hidden size-4 shrink-0 text-ink-3 sm:block" strokeWidth={1.5} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-medium">{doc.title}</p>
+                  <p className="mt-0.5 text-[13px] leading-[20px] text-ink-3">
+                    {doc.filename} · {formatBytes(doc.size_bytes)} · {doc.chunk_count} {doc.chunk_count === 1 ? "passage" : "passages"}
+                  </p>
+                  <p className="text-[13px] leading-[20px] text-ink-3">
+                    {doc.owner} · {formatDateTime(doc.created_at)}
+                  </p>
+                  <p className="mt-1 text-[13px] text-ink-2">
+                    <span className="font-medium">{doc.access_mode === "rbac" ? "Role-based" : "Admin-defined"}:</span> {doc.access_summary}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {doc.can_edit && (
+                    <button type="button" onClick={() => setEditing(doc)} className={btnSecondary}>
+                      Access
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => downloadDocument(doc.id, doc.filename, persona).catch((e) => setActionError(errorMessage(e)))}
+                    className={btnSecondary}
+                  >
+                    Download
+                  </button>
+                  {doc.can_delete && (
+                    <button type="button" onClick={() => setRemoving(doc)} aria-label={`Delete ${doc.title}`} className={`${btnGhost} h-10`}>
+                      <Trash2 className="size-4" strokeWidth={1.5} />
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {actionError && !removing && (
+          <div className="mt-3">
+            <ErrorNote>{actionError}</ErrorNote>
+          </div>
+        )}
+      </section>
+
+      <EditAccessModal
+        doc={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          library.reload();
+        }}
+      />
+      <ConfirmModal
+        open={removing !== null}
+        title={`Delete “${removing?.title ?? ""}”?`}
+        description="The file and its indexed passages are removed. The deletion is recorded in the audit log."
+        confirmLabel="Delete document"
+        error={actionError}
+        onConfirm={remove}
+        onClose={() => {
+          setRemoving(null);
+          setActionError(null);
+        }}
+      />
+    </div>
+  );
+}
+
+function EditAccessModal({ doc, onClose, onSaved }: { doc: DocumentItem | null; onClose: () => void; onSaved: () => void }) {
+  const { boot, request } = useWorkspace();
+  const b = boot!;
+  const [value, setValue] = useState<AccessValue | null>(null);
+  const [title, setTitle] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [lastDoc, setLastDoc] = useState<DocumentItem | null>(null);
+
+  // Re-seed the form whenever a different document is opened.
+  if (doc !== lastDoc) {
+    setLastDoc(doc);
+    if (doc) {
+      setTitle(doc.title);
+      setError(null);
+      setValue({
+        mode: doc.access_mode,
+        departmentId: doc.department ? String(doc.department.id) : "",
+        roles: doc.grants?.roles ?? [],
+        departments: doc.grants?.departments ?? [],
+        personas: doc.grants?.personas ?? [],
+      });
+    }
+  }
+
+  async function save() {
+    if (!doc || !value) return;
+    setBusy(true);
+    setError(null);
+    const manage = b.capabilities.upload_scope;
+    const json: Record<string, unknown> = { title, access_mode: value.mode };
+    if (manage) {
+      json.department_id = value.mode === "rbac" && value.departmentId ? Number(value.departmentId) : value.mode === "rbac" ? null : doc.department?.id ?? null;
+      json.grants = value.mode === "scope" ? { roles: value.roles, departments: value.departments, personas: value.personas } : { roles: [], departments: [], personas: [] };
+    }
+    try {
+      await request(`/documents/${doc.id}/`, { method: "PATCH", json });
+      onSaved();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1040px] space-y-8">
-      {/* Functional dropzone only — no outer card wrapper */}
-      <div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[14px] text-ink-2">
-            Add PDF, Word, Markdown or plain text up to {facts.maxFileMb} MB ({facts.maxDocs} per user).
-          </p>
-          <div className="flex items-center gap-2.5">
-            <label htmlFor="doc-visibility" className="text-[13px] font-medium text-ink-3">
-              Visibility
-            </label>
-            <select
-              id="doc-visibility"
-              value={visibility}
-              onChange={(e) => setVisibility(e.target.value as DocVisibility)}
-              className="h-9 rounded-lg border border-line-strong bg-surface px-3 text-[14px] text-ink"
-            >
-              <option value="Everyone">Everyone</option>
-              <option value="Department">Department ({profile.department})</option>
-              <option value="Private">Only me (Private)</option>
-            </select>
-          </div>
-        </div>
-
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
+    <Modal open={doc !== null} onClose={onClose} title="Document access" description="Changes apply immediately and are recorded in the audit log." wide>
+      {doc && value && (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void save();
           }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            processFiles(e.dataTransfer.files);
-          }}
-          className={`mt-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-dashed px-6 py-5 transition-colors duration-150 ${
-            dragOver ? "border-ink bg-raised" : "border-line-strong bg-deep/50"
-          }`}
+          className="grid gap-5"
         >
-          <div className="flex items-center gap-3.5">
-            <UploadCloud className="size-5 shrink-0 text-ink-2" strokeWidth={1.5} />
-            <div>
-              <p className="text-[15px] font-medium text-ink">Drop a file here to index locally</p>
-              <p className="text-[13px] text-ink-3">Supports .pdf, .docx, .md and .txt</p>
-            </div>
+          <div className="grid gap-1.5">
+            <label htmlFor="edit-title" className="text-[13px] font-medium">
+              Title
+            </label>
+            <input id="edit-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required className={inputClass} />
           </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".txt,.md,.pdf,.docx"
-            className="hidden"
-            onChange={(e) => {
-              processFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="inline-flex h-9 items-center rounded-lg bg-btn px-4 text-[14px] font-medium text-on-btn transition-[background-color,transform] duration-150 hover:bg-btn-hover active:scale-[0.98]"
-          >
-            Choose file
-          </button>
-        </div>
-
-        {uploadStatus && <p className="mt-3 text-[13px] font-medium text-ink">{uploadStatus}</p>}
-      </div>
-
-      {/* Open frameless document list */}
-      <div>
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
-          <div>
-            <h2 className="text-[16px] font-semibold text-ink">Document library</h2>
-            <p className="text-[13px] text-ink-3">
-              {isAdmin
-                ? `${docs.length} total files · OKF ${pinnedOkfCount}/${facts.okfMaxDocs} pinned`
-                : `${visibleDocs.length} permitted files · ${docs.length - visibleDocs.length} restricted hidden`}
-            </p>
+          <AccessFields boot={b} value={value} onChange={setValue} idPrefix="edit" />
+          {error && <ErrorNote>{error}</ErrorNote>}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={onClose} className={btnSecondary}>
+              Cancel
+            </button>
+            <button type="submit" disabled={busy || !title.trim()} className={btnPrimary}>
+              {busy ? "Saving…" : "Save access"}
+            </button>
           </div>
-          <FileSearch value={query} onChange={setQuery} />
-        </div>
-
-        {okfNotice && <p className="pb-3 text-[13px] font-medium text-ink">{okfNotice}</p>}
-
-        <ul className="divide-y divide-line border-y border-line">
-          {filtered.map((doc) => (
-            <li
-              key={doc.id}
-              className="flex flex-wrap items-center gap-3 px-2 py-4 transition-colors duration-150 hover:bg-deep/50"
-            >
-              <FileText className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="truncate text-[15px] font-medium text-ink">{doc.name}</span>
-                  {doc.isOkf && (
-                    <span className="inline-flex items-center gap-1 rounded bg-btn px-2 py-0.5 text-[11px] font-medium text-on-btn">
-                      <Pin className="size-3" strokeWidth={1.5} />
-                      OKF
-                    </span>
-                  )}
-                </div>
-                <p className="text-[13px] text-ink-3">
-                  {doc.owner} · {doc.department} · {doc.sizeLabel} · {doc.chunks} chunks · {doc.updated}
-                </p>
-              </div>
-              <span className="text-[13px] text-ink-3">{doc.visibility}</span>
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => onToggleOkf(doc.id)}
-                  className={`h-8 rounded-lg px-3 text-[13px] font-medium transition-colors ${
-                    doc.isOkf
-                      ? "bg-btn text-on-btn hover:bg-btn-hover"
-                      : "border border-line-strong text-ink hover:bg-raised"
-                  }`}
-                >
-                  {doc.isOkf ? "Unpin OKF" : "Pin OKF"}
-                </button>
-              )}
-              {!isAdmin && doc.employeeAccess === "Own" && (
-                <button
-                  type="button"
-                  onClick={() => onToggleShare(doc.id)}
-                  className="h-8 rounded-lg border border-line-strong px-3 text-[13px] font-medium text-ink hover:bg-raised"
-                >
-                  {doc.visibility === "Private" ? "Share" : "Revoke"}
-                </button>
-              )}
-              {(isAdmin || doc.employeeAccess === "Own") && doc.id.startsWith("upload-") && (
-                <button
-                  type="button"
-                  onClick={() => onDeleteDoc(doc.id)}
-                  aria-label={`Delete ${doc.name}`}
-                  className="grid size-8 place-items-center rounded-lg text-ink-3 hover:bg-raised hover:text-ink"
-                >
-                  <Trash2 className="size-4" strokeWidth={1.5} />
-                </button>
-              )}
-            </li>
-          ))}
-          {filtered.length === 0 && (
-            <li className="py-8 text-center text-[14px] text-ink-3">No matching documents.</li>
-          )}
-        </ul>
-      </div>
-    </div>
+        </form>
+      )}
+    </Modal>
   );
 }

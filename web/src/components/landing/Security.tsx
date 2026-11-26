@@ -1,54 +1,51 @@
-import { CloudOff, Filter, HardDrive, Link2, Lock, ScanText } from "lucide-react";
+import { Cloud, FileText, Filter, KeyRound, Link2, UserRoundCog } from "lucide-react";
 
-import type { Facts } from "@/lib/facts";
-
-export function Security({ facts }: { facts: Facts }) {
+export function Security({ maxFileMb }: { maxFileMb: number }) {
   const items = [
     {
-      icon: HardDrive,
-      title: "Runs on your machine",
-      text: "Documents, indexes and answers live in a local SQLite database, with a local Ollama model writing the answers.",
+      icon: Cloud,
+      title: "Local, Gemini or Hosted",
+      text: "Local runs through Ollama on the workspace server. Gemini and Hosted send the question and the retrieved passages to those providers, and the workspace asks you to confirm before switching.",
     },
     {
       icon: Filter,
       title: "Permissions come first",
-      text: "Files a person cannot open are filtered out before ranking, so they never reach the model.",
+      text: "Passages are filtered by role, department and explicit scopes before ranking, so a model only receives text the person could open anyway.",
     },
     {
       icon: Link2,
-      title: "Tamper-evident ledger",
-      text: "Uploads, questions, shares and admin changes are chained with SHA-256. Verification shows exactly where a chain breaks.",
+      title: "Hash-chained audit",
+      text: "Searches, uploads, shares and more are recorded with SHA-256 links and verified on the server. It exposes edits to the log; it is not externally anchored storage.",
     },
     {
-      icon: Lock,
-      title: "Sign-in lockout",
-      text: `${facts.maxFailedLogins} failed attempts lock an account for ${facts.lockoutMinutes} minutes. Disabled accounts cannot sign in at all.`,
+      icon: KeyRound,
+      title: "Keys stay on the server",
+      text: "Provider credentials live in the Django environment. The browser never sees them, and an unconfigured provider says so instead of failing silently.",
     },
     {
-      icon: ScanText,
-      title: "Guarded against hidden instructions",
-      text: "Text inside a document is treated as content to quote, never as a command to follow.",
+      icon: FileText,
+      title: "Supported files",
+      text: `PDF with a text layer, Word (.docx), Markdown and plain text, up to ${maxFileMb} MB each. Scanned PDFs need OCR first.`,
     },
     {
-      icon: CloudOff,
-      title: "Cloud chat is opt-in and labelled",
-      text: "An administrator can switch chat to Gemini. While it is on, every screen says so, and indexing stays local.",
+      icon: UserRoundCog,
+      title: "Demo access, no sign-in",
+      text: "The persona selector previews permissions; it is not authentication. Use synthetic documents only, never real employee or customer data.",
     },
   ];
 
   return (
-    <section id="security" aria-labelledby="security-title" className="border-y border-line bg-deep/60 py-24 md:py-32">
-      <div className="container-page grid gap-14 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-20">
-        <div data-reveal className="lg:sticky lg:top-28 lg:self-start">
+    <section id="security" aria-labelledby="security-title" className="section-fit border-y border-line bg-deep/60">
+      <div className="container-page grid w-full gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-16">
+        <div data-reveal>
           <h2 id="security-title" className="heading">
-            Private by design, with nothing taken on trust
+            What stays where
           </h2>
           <p className="mt-4 text-[17px] leading-[28px] text-ink-2">
-            DocuTrust is built for documents you would never paste into a public chatbot. Each safeguard below can be
-            checked, not just promised.
+            Plain statements about where your questions go and what the demo does and does not protect.
           </p>
         </div>
-        <ul className="grid gap-x-10 gap-y-10 sm:grid-cols-2">
+        <ul className="grid gap-x-8 gap-y-8 sm:grid-cols-2">
           {items.map((item) => (
             <li key={item.title} data-reveal>
               <item.icon className="size-[18px] text-ink-2" strokeWidth={1.5} />

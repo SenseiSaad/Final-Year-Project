@@ -8,3 +8,4 @@ numpy
 bcrypt
 qrcode[pil]
 pytest
+pytest-django

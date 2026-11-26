@@ -1,5 +1,5 @@
 'use client';
-import { type JSX, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, MotionProps } from 'motion/react';
 
 export type TextScrambleProps = {
@@ -27,9 +27,7 @@ export function TextScramble({
   onScrambleComplete,
   ...props
 }: TextScrambleProps) {
-  const MotionComponent = motion.create(
-    Component as keyof JSX.IntrinsicElements
-  );
+  const MotionComponent = (motion as unknown as Record<string, React.ElementType>)[Component as string] ?? motion.p;
   const [scrambledText, setScrambledText] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const text = children;
@@ -75,7 +73,9 @@ export function TextScramble({
   useEffect(() => {
     if (!trigger) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- starts the scramble animation
     scramble();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger, text]);
 
   return (

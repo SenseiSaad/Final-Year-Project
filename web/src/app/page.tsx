@@ -7,7 +7,6 @@ import { ProductTour } from "@/components/landing/ProductTour";
 import { Roles } from "@/components/landing/Roles";
 import { SectionHead } from "@/components/landing/SectionHead";
 import { Security } from "@/components/landing/Security";
-import { Stats } from "@/components/landing/Stats";
 import { WorkspaceSection } from "@/components/landing/WorkspaceSection";
 import { facts } from "@/lib/facts";
 
@@ -15,22 +14,21 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <Stats />
-      <HowItWorks facts={facts} />
-      <section id="product" aria-labelledby="product-title" className="border-y border-line bg-deep py-24 md:py-32">
-        <div className="container-page">
+      <HowItWorks />
+      <section id="product" aria-labelledby="product-title" className="section-fit border-y border-line bg-deep">
+        <div className="container-page w-full">
           <SectionHead
             id="product-title"
-            title="See how it decides what to tell you"
-            lead="A working preview with sample documents. Pick a tab and try it."
+            title="How answers stay grounded"
+            lead="Four short walk-throughs of retrieval, refusal, access and the audit chain. They run on sample data in your browser; the workspace itself uses the live backend."
           />
           <ProductTour facts={facts} />
         </div>
       </section>
-      <Roles facts={facts} />
-      <Security facts={facts} />
+      <Roles />
+      <Security maxFileMb={facts.maxFileMb} />
       <WorkspaceSection />
-      <Faq facts={facts} />
+      <Faq maxFileMb={facts.maxFileMb} />
       <Closing />
       <ScrollReveal />
     </>

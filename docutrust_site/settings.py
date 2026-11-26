@@ -8,9 +8,13 @@ from core.config import load_env
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_env()
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "docutrust-local-demo-insecure-key-change-before-deployment")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or "docutrust-local-demo-insecure-key-change-before-deployment"
 DEBUG = os.environ.get("DJANGO_DEBUG", "1").lower() in {"1", "true", "yes"}
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "[::1]", "testserver"]
+if not DEBUG and SECRET_KEY.startswith("docutrust-local-demo"):
+    raise RuntimeError("Set DJANGO_SECRET_KEY before running with DJANGO_DEBUG=0.")
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "[::1]", "testserver"] + [
+    host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if host.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -21,6 +25,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "accounts",
     "site_pages",
+    "workspace.apps.WorkspaceConfig",
 ]
 
 # Custom user model chosen before the first migration so role/department
@@ -29,6 +34,7 @@ AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "workspace.cors.WorkspaceCorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -62,8 +68,10 @@ ASGI_APPLICATION = "docutrust_site.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ.get("DOCUTRUST_DJANGO_DB", str(BASE_DIR / "data" / "docutrust_django.sqlite3")),
-        "OPTIONS": {"timeout": 20},
+        "NAME": os.environ.get("DOCUTRUST_DJANGO_DB") or str(BASE_DIR / "data" / "docutrust_django.sqlite3"),
+        # IMMEDIATE takes the write lock when a transaction starts, so the audit
+        # hash chain cannot hand two writers the same sequence number.
+        "OPTIONS": {"timeout": 20, "transaction_mode": "IMMEDIATE"},
     }
 }
 
@@ -76,7 +84,19 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "static_collected"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = Path(os.environ.get("DOCUTRUST_MEDIA_ROOT") or BASE_DIR / "media").resolve()
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Exact origins only. The no-auth demo API does not allow cookies/credentials.
+WORKSPACE_CORS_ALLOWED_ORIGINS = tuple(
+    origin.strip().rstrip("/")
+    for origin in os.environ.get(
+        "DOCUTRUST_CORS_ALLOWED_ORIGINS",
+        "http://127.0.0.1:3100,http://localhost:3100,http://127.0.0.1:3000,http://localhost:3000",
+    ).split(",")
+    if origin.strip() and origin.strip() != "*"
+)
 
 # A portfolio/demo site, not a user account surface. Keep it stateless for now.
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"

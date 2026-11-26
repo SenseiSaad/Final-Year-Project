@@ -1,80 +1,70 @@
 "use client";
 
-import { Plus } from "lucide-react";
-import { useState } from "react";
-
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/core/accordion";
-import type { Facts } from "@/lib/facts";
+} from "@/components/ui/accordion";
 
-export function Faq({ facts }: { facts: Facts }) {
+export function Faq({ maxFileMb }: { maxFileMb: number }) {
   const items = [
     {
-      q: "Do our documents go to the cloud?",
-      a: "No, not by default. Files, search indexes and answers stay on the machine DocuTrust runs on. An administrator can choose Gemini for the chat step. When they do, the question and the passages found for it are sent to Google, and every screen shows that cloud chat is on. Indexing always stays local.",
+      value: "providers",
+      trigger: "Which models answer my questions?",
+      content:
+        "Local uses Ollama on the workspace server, so nothing goes to a cloud provider. Gemini and Hosted (any OpenAI-compatible service) are cloud providers: your question and the retrieved passages are sent to them. A provider that is not configured on the server says so in the chat instead of answering.",
     },
     {
-      q: "What happens when the documents do not have the answer?",
-      a: `DocuTrust tells you it could not find the answer. If no passage scores above the minimum of ${facts.minScore}, it declines rather than filling the gap from general knowledge.`,
+      value: "no-answer",
+      trigger: "What if the documents do not contain the answer?",
+      content:
+        "You get a refusal that says no permitted source matched. The model is not asked to guess, and the attempt is still recorded in the audit log.",
     },
     {
-      q: "Which files can we upload?",
-      a: `PDF, Word (.docx), Markdown and plain text, up to ${facts.maxFileMb} MB per file and ${facts.maxDocs} files per person. Scanned PDFs need a text layer, because DocuTrust does not run OCR.`,
+      value: "files",
+      trigger: "Which files can I upload?",
+      content: `PDF, Word (.docx), Markdown and plain text, up to ${maxFileMb} MB each. PDFs need a text layer; scanned pages are not read because OCR is not included.`,
     },
     {
-      q: "Can I share one document with one colleague?",
-      a: "Yes. Share a single file with a single teammate and revoke it whenever you like. It appears on their Shared with me page and in their search results until you do.",
+      value: "sharing",
+      trigger: "Who can read an uploaded file?",
+      content:
+        "Either a role-based policy (the document's department and the managers assigned to it) or an admin-defined scope that names specific roles, departments and people. Finance and HR never see each other's files unless an admin explicitly grants it.",
     },
     {
-      q: "How does the ledger show tampering?",
-      a: "Each entry stores a SHA-256 hash of its own content together with the hash of the entry before it. If anyone changes an old entry, its hash no longer matches and verification points to the first broken link.",
+      value: "ledger",
+      trigger: "How trustworthy is the audit log?",
+      content:
+        "Each entry stores the SHA-256 of its contents and of the entry before it, and the server can recompute the whole chain on demand. That reveals edits made afterwards. It is not stored outside the database, so someone with full database access could rewrite it.",
     },
     {
-      q: "What do we need to run it?",
-      a: "One computer with Python and Ollama installed. The default models are small enough for an ordinary office machine, and no account, subscription or internet connection is needed to use it.",
-    },
-    {
-      q: "Is DocuTrust ready to use today?",
-      a: "Yes—open the Workspace directly from this page with no login required to test Chat, Team chat, Document upload, OKF pinning and the SHA-256 Audit log.",
+      value: "status",
+      trigger: "Is this safe for real company documents?",
+      content:
+        "No. The demo has no sign-in: anyone can pick the Admin persona. Use it with synthetic documents to evaluate the workflow, not to store confidential data.",
     },
   ];
 
-  const [open, setOpen] = useState<string | null>(items[0].q);
-
   return (
-    <section id="faq" aria-labelledby="faq-title" className="py-24 md:py-32">
-      <div className="container-page grid gap-12 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-20">
+    <section id="faq" aria-labelledby="faq-title" className="section-fit">
+      <div className="container-page grid w-full gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-16">
         <div data-reveal>
           <h2 id="faq-title" className="heading">
             Questions teams ask first
           </h2>
-          <p className="mt-4 text-[17px] leading-[28px] text-ink-2">
-            Open the Workspace above to test every feature directly—no account or sign-in needed.
-          </p>
+          <p className="mt-4 text-[17px] leading-[28px] text-ink-2">Straight answers about models, files and access.</p>
         </div>
 
         <div data-reveal>
-          <Accordion
-            className="border-t border-line"
-            transition={{ type: "spring", stiffness: 120, damping: 20 }}
-            expandedValue={open}
-            onValueChange={(value) => setOpen(value === null ? null : String(value))}
-          >
+          <Accordion type="multiple" className="border-t border-line">
             {items.map((item) => (
-              <AccordionItem key={item.q} value={item.q} className="border-b border-line">
-                <AccordionTrigger className="group flex w-full items-center justify-between gap-6 py-5 text-left text-[16px] font-medium text-ink">
-                  {item.q}
-                  <Plus
-                    className="size-[18px] shrink-0 text-ink-3 transition-transform duration-300 group-data-[expanded]:rotate-45"
-                    strokeWidth={1.5}
-                  />
+              <AccordionItem key={item.value} value={item.value} className="border-b border-line">
+                <AccordionTrigger className="py-5 text-[16px] font-medium leading-[1.4] text-ink hover:no-underline">
+                  {item.trigger}
                 </AccordionTrigger>
-                <AccordionContent className="overflow-hidden">
-                  <p className="max-w-[40rem] pb-6 text-[15px] leading-[25px] text-ink-2">{item.a}</p>
+                <AccordionContent className="max-w-[40rem] pb-6 text-[15px] leading-[25px] text-ink-2">
+                  {item.content}
                 </AccordionContent>
               </AccordionItem>
             ))}

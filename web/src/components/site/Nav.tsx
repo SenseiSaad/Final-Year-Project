@@ -32,12 +32,14 @@ export function Nav() {
   return (
     <header
       className={`sticky top-0 z-40 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-line bg-bg" : "border-transparent bg-transparent"
+        scrolled || open
+          ? "border-line bg-bg"
+          : "border-transparent bg-transparent [--ink:#f6f4ef] [--ink-2:rgb(255_255_255/0.78)] [--ink-3:rgb(255_255_255/0.55)] [--line:rgb(255_255_255/0.16)] [--line-strong:rgb(255_255_255/0.3)] [--raised:rgb(255_255_255/0.1)] [--btn:#f6f4ef] [--btn-hover:#ffffff] [--on-btn:#0a0a0a]"
       }`}
     >
       <div className="container-page flex h-16 items-center gap-8">
         <Logo />
-        <nav aria-label="Main" className="hidden flex-1 items-center gap-1 md:flex">
+        <nav aria-label="Main" className="hidden flex-1 items-center gap-1 lg:flex">
           <AnimatedBackground
             defaultValue={links[0].href}
             className="rounded-lg bg-raised"
@@ -49,14 +51,14 @@ export function Nav() {
                 key={link.href}
                 href={link.href}
                 data-id={link.href}
-                className="rounded-lg px-3 py-2 text-[14px] font-medium text-ink-2 transition-colors duration-150 hover:text-ink"
+                className="whitespace-nowrap rounded-lg px-3 py-2 text-[14px] font-medium text-ink-2 transition-colors duration-150 hover:text-ink"
               >
                 {link.label}
               </Link>
             )) as unknown as ReactElement<{ "data-id": string }>[]}
           </AnimatedBackground>
         </nav>
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
+        <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <ThemeToggle />
           <EarlyAccessDialog
             label="Join early access"
@@ -64,13 +66,13 @@ export function Nav() {
           />
           <Link
             href="/dashboard"
-            className="hidden h-9 items-center rounded-lg bg-btn px-4 text-[14px] font-medium text-on-btn transition-colors duration-150 hover:bg-btn-hover sm:inline-flex"
+            className="hidden h-9 items-center whitespace-nowrap rounded-lg bg-btn px-4 text-[14px] font-medium text-on-btn transition-colors duration-150 hover:bg-btn-hover sm:inline-flex"
           >
             Open workspace
           </Link>
           <button
             type="button"
-            className="grid size-9 place-items-center rounded-lg text-ink-2 hover:bg-raised md:hidden"
+            className="grid size-9 place-items-center rounded-lg text-ink-2 hover:bg-raised lg:hidden"
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
@@ -81,7 +83,7 @@ export function Nav() {
         </div>
       </div>
       {open && (
-        <nav id="mobile-nav" aria-label="Main" className="container-page grid gap-1 pb-4 md:hidden">
+        <nav id="mobile-nav" aria-label="Main" className="container-page grid gap-1 pb-4 lg:hidden">
           {links.map((link) => (
             <Link
               key={link.href}

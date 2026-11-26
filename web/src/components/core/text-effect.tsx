@@ -1,11 +1,7 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useRef } from "react";
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+import { animate, stagger, useInView, useReducedMotion } from "motion/react";
+import { useEffect, useRef } from "react";
 
 type Per = "char" | "word" | "line";
 type Preset = "rotate" | "fade" | "slide";
@@ -16,64 +12,56 @@ type TextEffectProps = {
   preset?: Preset;
   delay?: number;
   /** Seconds between units. Shorter for long headlines. */
-  stagger?: number;
+  staggerSeconds?: number;
   className?: string;
 };
 
 /*
-  Per-unit entrance: rotate tips each unit back 90deg, fade only changes opacity.
-  Animates when the text enters the viewport, so below-the-fold headings show it too.
-  The moving units are hidden from assistive tech; give the parent an `aria-label`
-  with the full sentence. The `.js-motion` gate keeps the text hidden before paint,
-  and the 3s fallback in layout.tsx reveals it if scripts fail.
+  Per-unit entrance built on motion: rotate tips each unit back 90deg,
+  fade only changes opacity, slide lifts it. Plays when the text enters
+  the viewport, so below-the-fold headings show it too.
+  The moving units are hidden from assistive tech; give the parent an
+  `aria-label` with the full sentence (as the hero h1 does).
 */
 export function TextEffect({
   children,
   per = "char",
   preset = "rotate",
   delay = 0,
-  stagger = 0.05,
+  staggerSeconds = 0.05,
   className,
 }: TextEffectProps) {
   const root = useRef<HTMLSpanElement>(null);
+  const inView = useInView(root, { once: true, amount: 0.5 });
+  const reduced = useReducedMotion();
 
-  useGSAP(
-    () => {
-      const items = root.current?.querySelectorAll<HTMLElement>("[data-text-item]");
-      if (!items?.length) return;
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const items = el.querySelectorAll<HTMLElement>("[data-text-item]");
+    if (!items.length) return;
 
-      const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.set(root.current, { visibility: "visible" });
+    if (reduced) {
+      el.style.visibility = "visible";
+      return;
+    }
 
-        const from =
-          preset === "fade"
-            ? { autoAlpha: 0 }
-            : preset === "slide"
-              ? { autoAlpha: 0, y: 14 }
-              : { autoAlpha: 0, rotateX: 90, y: 10, transformPerspective: 800, transformOrigin: "50% 50%" };
-        const to =
-          preset === "fade"
-            ? { autoAlpha: 1 }
-            : preset === "slide"
-              ? { autoAlpha: 1, y: 0 }
-              : { autoAlpha: 1, rotateX: 0, y: 0 };
+    if (!inView) return;
 
-        const tl = gsap.timeline({
-          delay,
-          scrollTrigger: { trigger: root.current, start: "top 88%", once: true },
-        });
-        tl.fromTo(items, from, { ...to, duration: 0.2, stagger, ease: "power2.out" });
-      });
-      mm.add("(prefers-reduced-motion: reduce)", () => {
-        gsap.set(root.current, { visibility: "visible" });
-        gsap.set(items, { clearProps: "all", autoAlpha: 1 });
-      });
+    el.style.visibility = "visible";
+    const keyframes =
+      preset === "fade"
+        ? { opacity: [0, 1] }
+        : preset === "slide"
+          ? { opacity: [0, 1], y: [14, 0] }
+          : { opacity: [0, 1], rotateX: [90, 0], y: [10, 0] };
 
-      return () => mm.revert();
-    },
-    { scope: root },
-  );
+    animate(items, keyframes, {
+      duration: 0.2,
+      delay: stagger(staggerSeconds, { startDelay: delay }),
+      ease: "easeOut",
+    });
+  }, [inView, reduced, preset, delay, staggerSeconds]);
 
   return (
     <span ref={root} data-text-effect className={className} style={{ perspective: "800px" }}>

@@ -51,6 +51,9 @@ for port in 8300 3100; do
   fi
 done
 
+# Create or update the Django database (workspace tables and demo seed data)
+.venv/bin/python manage.py migrate --noinput
+
 # Both servers are deliberately available only on this machine.
 # Django (backend API and admin) on 8300 avoids the system service already bound to 8000.
 .venv/bin/python manage.py runserver 127.0.0.1:8300 &

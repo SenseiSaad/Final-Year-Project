@@ -117,7 +117,7 @@ export function LedgerDemo() {
         })}
       </ol>
       <p className="mt-4 text-[13px] text-ink-3">
-        Each entry is hashed together with the one before it. These SHA-256 hashes are computed live in your browser.
+        Demo only: SHA-256 hashes for these sample entries are computed in your browser; they do not verify an external or production audit log.
       </p>
     </div>
   );

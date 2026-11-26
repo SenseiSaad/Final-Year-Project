@@ -1,30 +1,18 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { FileText, Lock } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { Segmented } from "@/components/landing/Segmented";
 import { docs, people } from "@/lib/samples";
 
-gsap.registerPlugin(useGSAP);
-
 export function AccessDemo() {
   const [index, setIndex] = useState(0);
-  const root = useRef<HTMLDivElement>(null);
   const person = people[index];
   const count = person.access.filter(Boolean).length;
 
-  useGSAP(
-    () => {
-      gsap.fromTo("[data-row]", { autoAlpha: 0.4, x: -4 }, { autoAlpha: 1, x: 0, duration: 0.4, stagger: 0.04, ease: "power2.out", clearProps: "opacity,visibility,transform" });
-    },
-    { scope: root, dependencies: [index] },
-  );
-
   return (
-    <div ref={root}>
+    <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Segmented label="Signed in as" options={people.map((p) => p.label)} value={index} onChange={setIndex} />
         <p className="font-mono text-[12px] tabular-nums text-ink-3">
@@ -32,14 +20,17 @@ export function AccessDemo() {
         </p>
       </div>
 
-      <ul className="mt-6 divide-y divide-line border-y border-line">
+      {/* key={index} replays the row entrance when the person changes */}
+      <ul key={index} className="mt-6 divide-y divide-line border-y border-line">
         {docs.map((doc, i) => {
           const access = person.access[i];
           return (
             <li
               key={doc.name}
-              data-row
-              className={`flex h-12 items-center gap-3 transition-opacity duration-300 ${access ? "" : "opacity-45"}`}
+              style={{ animationDelay: `${i * 40}ms` }}
+              className={`flex h-12 animate-[row-in_400ms_var(--ease-out-soft)] items-center gap-3 transition-opacity duration-300 ${
+                access ? "" : "opacity-45"
+              }`}
             >
               {access ? (
                 <FileText className="size-4 shrink-0 text-ink-2" strokeWidth={1.5} />
@@ -60,7 +51,7 @@ export function AccessDemo() {
         })}
       </ul>
       <p className="mt-4 text-[13px] text-ink-3">
-        Hidden files are removed before ranking, so their text never reaches the model.
+        This sample illustrates visibility for the selected role. It does not enforce permissions or send content to a model.
       </p>
     </div>
   );

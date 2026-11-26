@@ -39,7 +39,6 @@ const config = loadTomlConfig();
 
 export const facts = {
   maxFileMb: config.uploads?.max_file_mb ?? 10,
-  maxDocs: config.uploads?.max_docs_per_user ?? 50,
   maxFailedLogins: config.auth?.max_failed_logins ?? 5,
   lockoutMinutes: config.auth?.lockout_minutes ?? 15,
   topK: config.rag?.top_k ?? 4,

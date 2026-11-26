@@ -1,40 +1,38 @@
 import { KeyRound, User, Users } from "lucide-react";
 
-import type { Facts } from "@/lib/facts";
-
 import { SectionHead } from "./SectionHead";
 
-export function Roles({ facts }: { facts: Facts }) {
-  const roles = [
-    {
-      icon: User,
-      title: "Employee",
-      text: "Uploads their own files, asks across everything they can open, and shares a single document with one teammate.",
-      points: [`Up to ${facts.maxDocs} documents`, "Revoke a share at any time", "Personal question history"],
-    },
-    {
-      icon: Users,
-      title: "Department",
-      text: "Handbooks and team documents stay inside the department. Members find them in search, other departments do not.",
-      points: ["Department-scoped documents", "One department and team per person", "Nothing crosses department lines"],
-    },
-    {
-      icon: KeyRound,
-      title: "Administrator",
-      text: "Adds people, pins official OKF guidance, assigns roles and checks that the activity ledger is intact.",
-      points: ["User and department management", "OKF pinning & ledger verification", "CSV export and usage stats"],
-    },
-  ];
+const roles = [
+  {
+    icon: User,
+    title: "Employees",
+    text: "See and cite documents from their own department, company-wide files and anything shared with them. Uploads can stay private.",
+    points: ["Own department only", "Private uploads", "Own chat history"],
+  },
+  {
+    icon: Users,
+    title: "Managers",
+    text: "Lead the departments explicitly assigned to them and the people who report to them. Being in a department never opens another one.",
+    points: ["Assigned departments and sub-departments", "Direct and indirect reports", "Team rooms they create"],
+  },
+  {
+    icon: KeyRound,
+    title: "Admins and executives",
+    text: "Define departments, roles and document scopes. Audit access is a separate permission that can be delegated to any role.",
+    points: ["Role and permission editor", "Admin-defined document scopes", "Per-person audit timelines"],
+  },
+];
 
+export function Roles() {
   return (
-    <section aria-labelledby="roles-title" className="py-24 md:py-32">
-      <div className="container-page">
+    <section aria-labelledby="roles-title" className="section-fit">
+      <div className="container-page w-full">
         <SectionHead
           id="roles-title"
-          title="Three roles with clear boundaries"
-          lead="What a person can find depends on who they are, not on what they type."
+          title="Access follows the role"
+          lead="Switch demo personas in the workspace to see the same question return different sources."
         />
-        <div className="mt-14 grid gap-10 md:grid-cols-3 md:gap-12">
+        <div className="mt-10 grid gap-8 md:grid-cols-3 md:gap-10 lg:mt-14">
           {roles.map((role) => (
             <article key={role.title} data-reveal className="border-t border-line pt-6">
               <role.icon className="size-[18px] text-ink" strokeWidth={1.5} />

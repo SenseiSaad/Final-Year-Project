@@ -82,8 +82,8 @@ export function AskPreview({ startDelay = 900 }: { startDelay?: number }) {
   return (
     <div className="border-y border-line-strong py-6">
       {/* Top strip: language switcher without boxed chrome */}
-      <div className="flex items-center justify-between gap-4 pb-5">
-        <span className="text-[13px] font-semibold text-ink">Ask</span>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pb-5">
+        <span className="text-[13px] font-semibold text-ink">Sample chat preview</span>
         <div className="flex gap-1" role="group" aria-label="Sample question">
           {askSamples.map((s, i) => (
             <button
@@ -105,7 +105,7 @@ export function AskPreview({ startDelay = 900 }: { startDelay?: number }) {
       <div className="min-h-[224px] space-y-5 border-t border-line pt-5" aria-live="polite">
         <div className="flex gap-3">
           <span className="grid size-7 shrink-0 place-items-center rounded-full bg-raised text-[12px] font-medium text-ink" aria-hidden="true">
-            AK
+            U
           </span>
           <p className="pt-0.5 text-[15px] font-medium leading-[23px] text-ink">
             {sample.question.slice(0, typed)}
@@ -147,7 +147,7 @@ export function AskPreview({ startDelay = 900 }: { startDelay?: number }) {
                 phase === "done" ? "opacity-100" : "opacity-0"
               }`}
             >
-              {sample.meta}
+              Sample response · illustrative content
             </p>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, FileText, FileUp, Hash, MessageSquare, MessagesSquare, Pin, ShieldCheck } from "lucide-react";
+import { ArrowRight, FileUp, MessageSquare, MessagesSquare, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import useMeasure from "react-use-measure";
@@ -12,45 +12,45 @@ const views = [
   {
     id: "chat",
     icon: MessageSquare,
-    label: "Chat",
-    summary: "Ask in English or Roman Urdu across permitted files. Answers appear in full prose with source files listed cleanly underneath.",
+    label: "AI chat",
+    summary: "Conversations are saved per person. Each answer cites the passages it used, and a question with no permitted source is refused.",
     lines: [
-      { tag: "Question", text: "How many annual leave days do I get and how many carry over?" },
-      { tag: "Answer", text: "As of January 2026, you get 18 annual leave days per year and can carry over up to 5 unused days until 31 March." },
-      { tag: "Sources", text: "2026-policy-updates.md (OKF) · leave-policy.pdf" },
+      { tag: "Models", text: "Pick Local, Gemini or Hosted per question; cloud choices ask for confirmation first." },
+      { tag: "Sources", text: "Expand a citation to read the exact passage and page." },
+      { tag: "History", text: "New chat, reopen or delete earlier conversations." },
     ],
   },
   {
     id: "team",
     icon: MessagesSquare,
     label: "Team chat",
-    summary: "Scoped channels for company-wide updates and department discussions so private HR or Finance threads stay separated.",
+    summary: "A General room exists from the start. Add rooms for everyone, one department or a chosen set of members.",
     lines: [
-      { tag: "#general", text: "Administrator pinned 2026-policy-updates.md as OKF guidance." },
-      { tag: "#finance", text: "Usman Tariq uploaded expense-policy.pdf for travel pre-approvals." },
-      { tag: "#hr-private", text: "Restricted to HR & Admin — hidden from other departments." },
+      { tag: "General", text: "Open to the whole workspace." },
+      { tag: "Department", text: "Visible to that department and the managers assigned to it." },
+      { tag: "Members", text: "Only the people you select can see the room." },
     ],
   },
   {
     id: "upload",
     icon: FileUp,
-    label: "Document upload",
-    summary: "Drop PDF, Word, Markdown or text files, pick visibility (Everyone, Department, or Private) and pin official OKF updates.",
+    label: "Documents",
+    summary: "Drop files in, watch them upload and index, then search the library or open the access settings for any file.",
     lines: [
-      { tag: "OKF pinned", text: "2026-policy-updates.md · Company-wide · +0.15 priority boost" },
-      { tag: "Department", text: "expense-policy.pdf · Finance · 9 passages indexed" },
-      { tag: "Private", text: "q3-budget-notes.md · Owner only · instant share or revoke" },
+      { tag: "Role-based", text: "Department members and assigned managers can read it." },
+      { tag: "Admin scope", text: "Only the roles, departments and people an admin picks." },
+      { tag: "Search", text: "Filter by name or search inside the text of permitted files." },
     ],
   },
   {
     id: "audit",
     icon: ShieldCheck,
     label: "Audit log",
-    summary: "Every upload, question, OKF change and account edit is appended to a SHA-256 hash chain with one-click verification and CSV export.",
+    summary: "Admins, executives and anyone granted the audit permission can open a full timeline for each person.",
     lines: [
-      { tag: "08:45", text: "Administrator · OKF pinned · 2026-policy-updates.md" },
-      { tag: "09:12", text: "Usman Tariq · File uploaded · expense-policy.pdf" },
-      { tag: "10:05", text: "Ayesha Khan · Question asked · 1 permitted source" },
+      { tag: "Timeline", text: "Questions, searches, uploads, shares and room activity." },
+      { tag: "Verify", text: "Recompute the SHA-256 chain on the server and see where it breaks." },
+      { tag: "Access", text: "Hidden entirely from roles without the permission." },
     ],
   },
 ] as const;
@@ -67,18 +67,18 @@ export function WorkspaceSection() {
   }
 
   return (
-    <section id="workspace" aria-labelledby="workspace-title" className="border-y border-line bg-deep py-24 md:py-32">
-      <div className="container-page">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-16">
+    <section id="workspace" aria-labelledby="workspace-title" className="section-fit border-y border-line bg-deep">
+      <div className="w-full">
+        <div className="container-page grid w-full gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-16">
           <div>
-            <h2 id="workspace-title" className="heading" aria-label="Workspace">
-              <TextEffect per="char" preset="fade" stagger={0.03}>
-                Workspace
+            <h2 id="workspace-title" className="heading" aria-label="Chat, files, teams and audit in one place">
+              <TextEffect per="char" preset="fade" staggerSeconds={0.012}>
+                Chat, files, teams and audit in one place
               </TextEffect>
             </h2>
             <p data-reveal className="mt-4 max-w-[30rem] text-[17px] leading-[28px] text-ink-2">
-              Open the workspace directly and try every feature—Chat, Team chat, Document upload, OKF pinning and the
-              Audit log. No login setup needed.
+              Open the workspace without signing in and switch demo personas to see how access changes. Everything you
+              add is stored by the Django service.
             </p>
 
             <div data-reveal className="mt-8 flex flex-wrap items-center gap-4">
@@ -89,7 +89,7 @@ export function WorkspaceSection() {
                 Open workspace
                 <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={1.5} />
               </Link>
-              <span className="text-[14px] text-ink-3">Direct access · no sign-in required</span>
+              <span className="text-[14px] text-ink-3">No sign-in · synthetic data only</span>
             </div>
           </div>
 
@@ -154,12 +154,9 @@ export function WorkspaceSection() {
                   <p className="text-[15px] leading-[25px] text-ink-2">{view.summary}</p>
                   <dl className="mt-6 divide-y divide-line border-y border-line">
                     {view.lines.map((row) => (
-                      <div key={row.tag} className="grid gap-1 py-3.5 sm:grid-cols-[120px_1fr] sm:items-baseline sm:gap-4">
+                      <div key={row.tag} className="grid gap-1 py-3.5 sm:grid-cols-[110px_1fr] sm:items-baseline sm:gap-4">
                         <dt className="flex items-center gap-1.5 text-[13px] font-medium text-ink">
-                          {row.tag === "OKF pinned" && <Pin className="size-3.5 text-ink-2" strokeWidth={1.5} />}
-                          {row.tag === "Sources" && <FileText className="size-3.5 text-ink-2" strokeWidth={1.5} />}
-                          {row.tag.startsWith("#") && <Hash className="size-3.5 text-ink-2" strokeWidth={1.5} />}
-                          {row.tag.replace(/^#/, "")}
+                          {row.tag}
                         </dt>
                         <dd className="text-[14px] leading-[22px] text-ink-2">{row.text}</dd>
                       </div>

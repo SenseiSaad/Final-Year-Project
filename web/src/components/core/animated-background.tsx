@@ -42,10 +42,12 @@ export function AnimatedBackground({
 
   useEffect(() => {
     if (defaultValue !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- keeps the active item in sync with the prop
       setActiveId(defaultValue);
     }
   }, [defaultValue]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return Children.map(children, (child: any, index) => {
     const id = child.props['data-id'];
 

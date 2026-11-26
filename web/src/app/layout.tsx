@@ -24,6 +24,15 @@ const newsreader = localFont({
   ],
 });
 
+const plexMono = localFont({
+  variable: "--font-plex-mono",
+  display: "swap",
+  src: [
+    { path: "./fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
+});
+
 export const metadata: Metadata = {
   title: {
     default: "DocuTrust AI · Every answer has a source",
@@ -41,7 +50,7 @@ export const viewport: Viewport = {
   ],
 };
 
-/* Hides animated elements until GSAP takes over; a timer shows them if scripts fail to load */
+/* Hides reveal targets until scripts take over; a timer shows them if scripts fail to load */
 const motionGate = `(function(){var d=document.documentElement;if(!matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('js-motion');setTimeout(function(){d.classList.remove('js-motion')},3000)}})()`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -49,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plex.variable} ${newsreader.variable}`}
+      className={`${plex.variable} ${newsreader.variable} ${plexMono.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: motionGate }} />

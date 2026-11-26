@@ -1,29 +1,43 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { useEffect } from "react";
 
 /*
-  Fades and lifts every [data-reveal] element once, as it enters the viewport.
-  Elements that enter together are staggered slightly. Runs nothing for reduced motion.
+  Reveals every [data-reveal] element once as it enters the viewport.
+  Elements entering together are staggered. No animation library needed:
+  the CSS in globals.css owns the transition, this only toggles `.is-in`.
 */
 export function ScrollReveal() {
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
-      const items = gsap.utils.toArray<HTMLElement>("[data-reveal]");
-      gsap.set(items, { autoAlpha: 0, y: 20 });
-      ScrollTrigger.batch(items, {
-        start: "top 88%",
-        once: true,
-        onEnter: (batch) =>
-          gsap.to(batch, { autoAlpha: 1, y: 0, duration: 0.7, ease: "power3.out", stagger: 0.08, overwrite: true }),
-      });
+  useEffect(() => {
+    const items = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    if (!items.length) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      items.forEach((el) => el.classList.add("is-in"));
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const entering = entries.filter((entry) => entry.isIntersecting);
+        entering.forEach((entry, order) => {
+          const el = entry.target as HTMLElement;
+          io.unobserve(el);
+          window.setTimeout(() => el.classList.add("is-in"), order * 80);
+        });
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.15 },
+    );
+
+    items.forEach((el) => {
+      // Already inside the viewport: reveal with the same stagger rhythm.
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) el.classList.add("is-in");
+      else io.observe(el);
     });
-    return () => mm.revert();
-  });
+
+    return () => io.disconnect();
+  }, []);
+
   return null;
 }

@@ -42,7 +42,7 @@ export function Footer() {
       </div>
       <div className="container-page flex flex-col gap-2 border-t border-line py-6 text-[13px] text-ink-3 sm:flex-row sm:justify-between">
         <p>© 2026 DocuTrust AI</p>
-        <p>Local-first workspace</p>
+        <p>Local, Gemini or Hosted models</p>
       </div>
     </footer>
   );

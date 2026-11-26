@@ -178,6 +178,7 @@ function DialogPortal({
     React.useState<HTMLElement | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- portal needs a client-only mount flag
     setMounted(true);
     setPortalContainer(container || document.body);
     return () => setMounted(false);

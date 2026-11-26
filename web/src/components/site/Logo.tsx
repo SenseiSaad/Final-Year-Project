@@ -18,7 +18,7 @@ export function Mark({ className = "size-6" }: { className?: string }) {
 
 export function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2.5 text-[16px] font-medium tracking-[-0.01em] text-ink">
+    <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap text-[16px] font-medium tracking-[-0.01em] text-ink">
       <Mark />
       <span>DocuTrust AI</span>
     </Link>

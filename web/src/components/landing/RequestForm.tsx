@@ -1,6 +1,5 @@
 "use client";
 
-import gsap from "gsap";
 import { Check, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
@@ -71,14 +70,13 @@ export function RequestForm({
   useEffect(() => {
     if (state.status === "ok" && done.current) {
       done.current.focus();
-      gsap.fromTo(done.current, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: "power3.out" });
       onSuccess?.();
     }
   }, [state.status, onSuccess]);
 
   if (state.status === "ok") {
     return (
-      <div ref={done} tabIndex={-1} className="grid min-h-[420px] place-content-center justify-items-center text-center outline-none">
+      <div ref={done} tabIndex={-1} className="grid min-h-[420px] animate-[fade-up_600ms_var(--ease-out-soft)] place-content-center justify-items-center text-center outline-none">
         <span className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent">
           <Check className="size-5" strokeWidth={1.5} />
         </span>

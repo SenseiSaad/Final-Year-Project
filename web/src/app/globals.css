@@ -8,10 +8,10 @@
   Light values first (white surface / matte black ink), dark values invert them.
 */
 :root {
-  --bg: #ffffff;
-  --deep: #f5f5f5;
+  --bg: #f5f4f3;
+  --deep: #efeeec;
   --surface: #ffffff;
-  --raised: #efefef;
+  --raised: #ecebe9;
   --line: rgb(18 18 18 / 0.11);
   --line-strong: rgb(18 18 18 / 0.22);
   --ink: #121212;
@@ -78,9 +78,31 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
 
-  /* Clean, visible professional sans-serif everywhere — no terminal monospace */
+  /* shadcn/ui semantic aliases mapped to the DocuTrust palette */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--btn);
+  --color-primary-foreground: var(--on-btn);
+  --color-secondary: var(--raised);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--raised);
+  --color-muted-foreground: var(--ink-3);
+  --color-accent-foreground: var(--on-accent);
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--ink-3);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--on-btn);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
   --font-sans: var(--font-plex), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-plex), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-serif: var(--font-newsreader), Georgia, serif;
 
   --shadow-window: var(--shadow);
@@ -126,6 +148,22 @@
   @media (min-width: 768px) {
     .container-page {
       padding-inline: 32px;
+    }
+  }
+
+  /*
+    Landing sections: comfortable padding everywhere; on tall desktop viewports
+    a section fills the screen and centres its content. Short screens simply
+    let the section grow, so nothing is clipped.
+  */
+  .section-fit {
+    padding-block: clamp(3.5rem, 9vw, 5.5rem);
+  }
+  @media (min-width: 1024px) and (min-height: 720px) {
+    .section-fit {
+      display: flex;
+      align-items: center;
+      min-height: calc(100svh - 4rem);
     }
   }
 
@@ -274,21 +312,53 @@
   mix-blend-mode: normal;
 }
 
-/* Elements that GSAP animates in start hidden only when scripts run */
-.js-motion [data-reveal],
-.js-motion [data-hero],
+/*
+  Scroll reveal without an animation library.
+  [data-reveal] starts hidden only when scripts run (the .js-motion gate),
+  then `.is-in` fades it in as it enters the viewport.
+*/
+[data-reveal] {
+  transition: opacity 700ms var(--ease-out-soft), transform 700ms var(--ease-out-soft);
+}
+
+.js-motion [data-reveal] {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.js-motion [data-reveal].is-in {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+
+/* Text effect units wait hidden for motion to play them in */
 .js-motion [data-text-effect] {
   visibility: hidden;
+}
+
+.js-motion [data-text-effect] [data-text-item] {
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
-  .js-motion [data-reveal],
-  .js-motion [data-hero],
+  [data-reveal] {
+    transition: none;
+  }
+  .js-motion [data-reveal] {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+  }
   .js-motion [data-text-effect] {
     visibility: visible;
+  }
+  .js-motion [data-text-effect] [data-text-item] {
+    opacity: 1;
   }
 }
 
@@ -300,5 +370,73 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-rise {
+  animation: hero-rise 900ms var(--ease-out-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise {
+    animation: none;
+  }
+}
+
+/* Tour and table animations, replayed by keying the container */
+@keyframes row-in {
+  from {
+    opacity: 0.4;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-row-in,
+  .animate-grow-x,
+  .animate-fade-up {
+    animation: none !important;
+  }
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
   }
 }
