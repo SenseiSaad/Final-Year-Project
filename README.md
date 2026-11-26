@@ -4,23 +4,24 @@ Private document Q&A for small teams: cited answers from your own files, role-sc
 
 ## What runs where
 
-- `web/` — Next.js 16 landing page and the responsive workspace UI (deployable to Vercel).
+- `web/` — Next.js 16 website, sign-in page and the responsive workspace UI (deployable to Vercel). Design rules are in `web/DESIGN.md`.
+- `original-frontend/` — saved copy of the previous frontend (2026-11-26, git `c9461c0`). Not started by `run.sh`, not deployed. `web-replaced/` is the same folder as it sat on disk before the swap and can be deleted.
 - `workspace/` — Django app behind the workspace: documents and search, AI chat, team rooms, departments and roles, hash-chained audit log, and the Local / Gemini / Hosted provider adapters. Data lives in SQLite; uploads live on the Django host.
 - `docutrust_site/`, `accounts/`, `site_pages/` — Django project, the early-access API and the admin.
 - `core/`, `app.py`, `pages/` — the earlier Streamlit prototype and its retrieval helpers; kept intact and not used by the workspace.
 - `tests/`, `eval/` — pytest suite and retrieval checks.
 
-> **Public demo, no sign-in.** The workspace has no authentication. The persona selector (Admin, CEO, Manager, Finance, HR, Employee, plus any you add) only *previews* role and department permissions, and anyone can pick Admin. Use synthetic documents only. Do not store real employee or customer data. The audit hash chain exposes edits but is not externally anchored.
+> **Public demo, open sign-in.** The workspace has no authentication. The sign-in page only starts a browser session, and everyone enters as the seeded Administrator with full control. Other roles still exist in the data and are enforced by the API (`X-Demo-User`), but this frontend has no way to switch to them. Use synthetic documents only. Do not store real employee or customer data. The audit hash chain exposes edits but is not externally anchored.
 
 ## Run locally
 
 Prerequisites: Python 3.11+, Node 20.9+, and optionally [Ollama](https://ollama.com) for the Local provider.
 
 ```bash
-./run.sh          # migrates the database, then starts Django on 8300 and the site on 3100
+./run.sh          # migrates, fills an empty workspace with sample data, then starts Django on 8300 and the site on 3100
 ```
 
-- Website: <http://127.0.0.1:3100> · Workspace: <http://127.0.0.1:3100/dashboard>
+- Website: <http://127.0.0.1:3100> · Sign in: <http://127.0.0.1:3100/login> · Workspace: <http://127.0.0.1:3100/workspace>
 - Django admin / API: <http://127.0.0.1:8300/admin/> · `/api/workspace/`
 
 Or step by step:
@@ -36,6 +37,8 @@ npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
 `manage.py seed_workspace` re-creates any missing built-in persona, role, department or the General room without touching your edits.
+
+`manage.py seed_demo_content` fills an empty workspace with a realistic fictional company (people, departments, 12 documents, AI chats, team rooms, announcements, notes and a dated audit trail). It does nothing when documents already exist. Because the audit log is append-only, to start over delete the SQLite file and the `media/` folder, then run `migrate` and the command again.
 
 ### Model providers (server side only)
 
@@ -90,5 +93,6 @@ Run `python manage.py migrate` on each deploy and serve with a WSGI server such 
 | System prompt and refusal message | `prompts/answer.txt`, `prompts/refuse.txt` |
 | Legacy Python UI wording | `texts.toml` |
 | Local secrets (`DOCUTRUST_ADMIN_PASSWORD`, demo password) | `.env` (never committed; see `.env.example`) |
-| Landing copy | `web/src/components/landing/` |
+| Landing copy | `web/src/components/landing/` and `web/src/lib/faq.ts` |
+| Colours, fonts, motion rules | `web/src/app/globals.css` and `web/DESIGN.md` |
 | Workspace roles, departments and rooms | the workspace UI itself, or `workspace/seed.py` for the starting data |

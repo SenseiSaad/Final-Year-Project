@@ -30,7 +30,7 @@ export function Toc({ sections }: { sections: { id: string; label: string }[] })
             href={`#${s.id}`}
             aria-current={current === s.id ? "location" : undefined}
             className={`-ml-px border-l py-1.5 pl-4 text-[13px] transition-colors duration-150 ${
-              current === s.id ? "border-accent text-ink" : "border-transparent text-ink-3 hover:text-ink-2"
+              current === s.id ? "border-ink text-ink" : "border-transparent text-ink-3 hover:text-ink-2"
             }`}
           >
             {s.label}

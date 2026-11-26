@@ -21,9 +21,11 @@ from . import providers, services
 from .audit import append_audit, people_summary, verify_chain
 from .models import (
     AIThread,
+    Announcement,
     AuditEvent,
     DemoPersona,
     Department,
+    Note,
     TeamMessage,
     TeamRoom,
     WorkspaceDocument,
@@ -42,7 +44,7 @@ from .seed import PERMISSIONS, PROTECTED_USERNAMES
 
 MAX_JSON_BODY = 128 * 1024
 DEMO_NOTICE = (
-    "Public demo: the persona selector is not sign-in. Use synthetic data only; "
+    "Public demo: this is not sign-in, and everyone enters as the Administrator. Use synthetic data only; "
     "do not upload real or confidential documents."
 )
 
@@ -245,6 +247,7 @@ def capabilities(actor):
         "manage_members": actor.can("members.manage"),
         "manage_roles": actor.can("roles.manage"),
         "view_audit": actor.can("audit.view"),
+        "manage_announcements": actor.can("announcements.manage"),
     }
 
 
@@ -842,3 +845,97 @@ def audit_verify(request, actor):
     valid, checked, first_invalid, head = verify_chain()
     append_audit(actor, "audit.verify", "audit", "chain", {"valid": valid, "events_checked": checked})
     return {"valid": valid, "events_checked": checked, "first_invalid_sequence": first_invalid, "head_hash": head}
+
+
+# ------------------------------------------------------------------ notes
+
+def note_json(note):
+    return {
+        "id": note.pk, "title": note.title, "body": note.body, "pinned": note.pinned,
+        "created_at": note.created_at.isoformat(), "updated_at": note.updated_at.isoformat(),
+    }
+
+
+def apply_note_fields(payload, note):
+    if "title" in payload:
+        note.title = text_field(payload, "title", "Title", max_length=160, required=False)
+    if "body" in payload:
+        note.body = text_field(payload, "body", "Note", max_length=20000, required=False)
+    if "pinned" in payload:
+        if not isinstance(payload["pinned"], bool):
+            raise ApiError("Pinned must be true or false.")
+        note.pinned = payload["pinned"]
+
+
+@api("GET", "POST")
+def notes(request, actor):
+    if request.method == "GET":
+        return {"notes": [note_json(n) for n in Note.objects.filter(owner=actor.persona)[:500]]}
+    if Note.objects.filter(owner=actor.persona).count() >= 500:
+        raise ApiError("You have reached the limit of 500 notes. Delete one first.", 409)
+    note = Note(owner=actor.persona)
+    apply_note_fields(body(request), note)
+    note.save()
+    return {"note": note_json(note)}, 201
+
+
+@api("PATCH", "DELETE")
+def note_detail(request, actor, note_id):
+    note = fetch(Note, note_id, "Note", Note.objects.filter(owner=actor.persona))
+    if request.method == "DELETE":
+        note.delete()
+        return {"deleted": True}
+    apply_note_fields(body(request), note)
+    note.save()
+    return {"note": note_json(note)}
+
+
+# ------------------------------------------------------------------ announcements
+
+def announcement_json(item):
+    return {
+        "id": item.pk, "title": item.title, "body": item.body, "level": item.level,
+        "pinned": item.pinned, "author": item.author_label, "created_at": item.created_at.isoformat(),
+    }
+
+
+def apply_announcement_fields(payload, item, *, creating):
+    if creating or "title" in payload:
+        item.title = text_field(payload, "title", "Title", max_length=160)
+    if "body" in payload:
+        item.body = text_field(payload, "body", "Message", max_length=4000, required=False)
+    if "level" in payload:
+        if payload["level"] not in Announcement.Level.values:
+            raise ApiError("Level must be info or important.")
+        item.level = payload["level"]
+    if "pinned" in payload:
+        if not isinstance(payload["pinned"], bool):
+            raise ApiError("Pinned must be true or false.")
+        item.pinned = payload["pinned"]
+
+
+@api("GET", "POST")
+def announcements(request, actor):
+    if request.method == "GET":
+        return {"announcements": [announcement_json(a) for a in Announcement.objects.all()[:200]]}
+    if not actor.can("announcements.manage"):
+        raise ApiError("This demo role is not allowed to post announcements.", 403)
+    item = Announcement(author=actor.persona, author_label=actor.label)
+    apply_announcement_fields(body(request), item, creating=True)
+    item.save()
+    append_audit(actor, "announcement.create", "announcement", item.pk, {"title": item.title, "level": item.level})
+    return {"announcement": announcement_json(item)}, 201
+
+
+@api("PATCH", "DELETE", perm="announcements.manage")
+def announcement_detail(request, actor, announcement_id):
+    item = fetch(Announcement, announcement_id, "Announcement")
+    if request.method == "DELETE":
+        title = item.title
+        item.delete()
+        append_audit(actor, "announcement.delete", "announcement", announcement_id, {"title": title})
+        return {"deleted": True}
+    apply_announcement_fields(body(request), item, creating=False)
+    item.save()
+    append_audit(actor, "announcement.update", "announcement", item.pk, {"title": item.title})
+    return {"announcement": announcement_json(item)}

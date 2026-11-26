@@ -71,6 +71,9 @@ These were agreed separately and are part of the build:
 | Gemini chat provider (optional) | Chat provider switch in config; embeddings always stay local. The interface must disclose when cloud chat is active. |
 | Ask history | Each user can see their previous questions and answers on the Ask page. |
 | Contact form | Split contact page; messages are stored locally and listed in Django admin. No email delivery. |
+| Notes and announcements | Private per-person notes (autosaved) and workspace announcements that people with the announcements permission can post, pin and delete. Announcement changes are audited. |
+| Search bar | Command-style search (Ctrl K) over pages, documents (names and text), notes and announcements, plus quick actions. |
+| Frontend redesign (2026-11-26) | New animated Next.js frontend in `web/`: liquid black and white themes with a one-click liquid switch, sign-in page, workspace. The previous frontend is saved in `original-frontend/`. |
 
 ## Out of scope
 

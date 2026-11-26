@@ -1,43 +1,50 @@
 "use client";
 
-import { useEffect } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
+
+gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
 
 /*
-  Reveals every [data-reveal] element once as it enters the viewport.
-  Elements entering together are staggered. No animation library needed:
-  the CSS in globals.css owns the transition, this only toggles `.is-in`.
+  Scroll choreography for a page.
+    [data-split]   headings: each line rises out of a mask
+    [data-reveal]  blocks fade and lift once, in small staggered batches
+  Everything shows at once for reduced motion. Text is always real text, so reading
+  order, selection and screen readers are unaffected.
 */
 export function ScrollReveal() {
-  useEffect(() => {
-    const items = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
-    if (!items.length) return;
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      items.forEach((el) => el.classList.add("is-in"));
-      return;
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        const entering = entries.filter((entry) => entry.isIntersecting);
-        entering.forEach((entry, order) => {
-          const el = entry.target as HTMLElement;
-          io.unobserve(el);
-          window.setTimeout(() => el.classList.add("is-in"), order * 80);
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      gsap.utils.toArray<HTMLElement>("[data-split]").forEach((el) => {
+        gsap.set(el, { visibility: "visible" });
+        SplitText.create(el, {
+          type: "lines",
+          mask: "lines",
+          autoSplit: true,
+          onSplit: (self) =>
+            gsap.from(self.lines, {
+              yPercent: 108,
+              duration: 1,
+              ease: "power4.out",
+              stagger: 0.09,
+              scrollTrigger: { trigger: el, start: "top 90%", once: true },
+            }),
         });
-      },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.15 },
-    );
+      });
 
-    items.forEach((el) => {
-      // Already inside the viewport: reveal with the same stagger rhythm.
-      const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) el.classList.add("is-in");
-      else io.observe(el);
+      const blocks = gsap.utils.toArray<HTMLElement>("[data-reveal]");
+      gsap.set(blocks, { autoAlpha: 0, y: 24 });
+      ScrollTrigger.batch(blocks, {
+        start: "top 90%",
+        once: true,
+        onEnter: (batch) =>
+          gsap.to(batch, { autoAlpha: 1, y: 0, duration: 0.8, ease: "power3.out", stagger: 0.08, overwrite: true }),
+      });
     });
-
-    return () => io.disconnect();
-  }, []);
-
+    return () => mm.revert();
+  });
   return null;
 }

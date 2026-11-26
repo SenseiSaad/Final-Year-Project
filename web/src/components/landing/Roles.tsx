@@ -25,20 +25,24 @@ const roles = [
 
 export function Roles() {
   return (
-    <section aria-labelledby="roles-title" className="section-fit">
-      <div className="container-page w-full">
+    <section id="roles" aria-labelledby="roles-title" className="py-28 md:py-36">
+      <div className="container-page">
         <SectionHead
           id="roles-title"
           title="Access follows the role"
-          lead="Switch demo personas in the workspace to see the same question return different sources."
+          lead="Every question is checked against role, department and explicit grants before a single passage is searched."
         />
-        <div className="mt-10 grid gap-8 md:grid-cols-3 md:gap-10 lg:mt-14">
+        <div className="mt-14 grid overflow-hidden rounded-[20px] border border-line-strong md:grid-cols-3">
           {roles.map((role) => (
-            <article key={role.title} data-reveal className="border-t border-line pt-6">
-              <role.icon className="size-[18px] text-ink" strokeWidth={1.5} />
-              <h3 className="mt-5 text-[18px] font-medium text-ink">{role.title}</h3>
-              <p className="mt-2 text-[15px] leading-[24px] text-ink-2">{role.text}</p>
-              <ul className="tick-list mt-6 grid gap-2.5 text-[14px] text-ink-2">
+            <article
+              key={role.title}
+              data-reveal
+              className="group border-line bg-surface p-7 transition-colors duration-300 ease-soft hover:bg-raised sm:p-9 [&:not(:last-child)]:border-b md:[&:not(:last-child)]:border-b-0 md:[&:not(:last-child)]:border-r"
+            >
+              <role.icon className="size-5 text-ink" strokeWidth={1.5} />
+              <h3 className="mt-8 text-[20px] font-medium tracking-[-0.01em]">{role.title}</h3>
+              <p className="mt-3 text-[15px] leading-[25px] text-ink-2">{role.text}</p>
+              <ul className="tick-list mt-7 grid gap-2.5 border-t border-line pt-7 text-[14px] text-ink-2">
                 {role.points.map((p) => (
                   <li key={p}>{p}</li>
                 ))}

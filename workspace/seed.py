@@ -9,6 +9,7 @@ PERMISSIONS = [
     ("members.manage", "Manage members", "Add members, change roles, departments and reporting lines."),
     ("roles.manage", "Manage roles", "Create roles and edit their permissions."),
     ("audit.view", "View audit log", "Open the audit log, person timelines and integrity checks."),
+    ("announcements.manage", "Manage announcements", "Post, pin and remove workspace announcements."),
 ]
 
 ROLES = [
@@ -17,7 +18,7 @@ ROLES = [
         "ceo",
         "CEO",
         "Executive oversight across departments.",
-        ["documents.view_all", "rooms.view_all", "rooms.create", "departments.manage", "members.manage", "audit.view"],
+        ["documents.view_all", "rooms.view_all", "rooms.create", "departments.manage", "members.manage", "audit.view", "announcements.manage"],
     ),
     ("manager", "Manager", "Leads the departments explicitly assigned to them.", ["rooms.create"]),
     ("finance", "Finance", "Finance department member.", []),

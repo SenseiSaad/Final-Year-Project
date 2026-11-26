@@ -72,7 +72,7 @@ export function LedgerDemo() {
             </>
           ) : (
             <>
-              <Check className="size-4 text-accent" strokeWidth={1.5} />
+              <Check className="size-4 text-ok" strokeWidth={1.5} />
               Chain intact · {stored.length} of {stored.length} entries verified
             </>
           )}

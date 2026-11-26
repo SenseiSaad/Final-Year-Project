@@ -1,74 +1,75 @@
 "use client";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
-export function Faq({ maxFileMb }: { maxFileMb: number }) {
-  const items = [
-    {
-      value: "providers",
-      trigger: "Which models answer my questions?",
-      content:
-        "Local uses Ollama on the workspace server, so nothing goes to a cloud provider. Gemini and Hosted (any OpenAI-compatible service) are cloud providers: your question and the retrieved passages are sent to them. A provider that is not configured on the server says so in the chat instead of answering.",
-    },
-    {
-      value: "no-answer",
-      trigger: "What if the documents do not contain the answer?",
-      content:
-        "You get a refusal that says no permitted source matched. The model is not asked to guess, and the attempt is still recorded in the audit log.",
-    },
-    {
-      value: "files",
-      trigger: "Which files can I upload?",
-      content: `PDF, Word (.docx), Markdown and plain text, up to ${maxFileMb} MB each. PDFs need a text layer; scanned pages are not read because OCR is not included.`,
-    },
-    {
-      value: "sharing",
-      trigger: "Who can read an uploaded file?",
-      content:
-        "Either a role-based policy (the document's department and the managers assigned to it) or an admin-defined scope that names specific roles, departments and people. Finance and HR never see each other's files unless an admin explicitly grants it.",
-    },
-    {
-      value: "ledger",
-      trigger: "How trustworthy is the audit log?",
-      content:
-        "Each entry stores the SHA-256 of its contents and of the entry before it, and the server can recompute the whole chain on demand. That reveals edits made afterwards. It is not stored outside the database, so someone with full database access could rewrite it.",
-    },
-    {
-      value: "status",
-      trigger: "Is this safe for real company documents?",
-      content:
-        "No. The demo has no sign-in: anyone can pick the Admin persona. Use it with synthetic documents to evaluate the workflow, not to store confidential data.",
-    },
-  ];
+import { cn } from "@/lib/cn";
+import type { Facts } from "@/lib/facts";
+import { FAQ } from "@/lib/faq";
+
+import { SectionHead } from "./SectionHead";
+
+export function Faq({ facts }: { facts: Facts }) {
+  const [open, setOpen] = useState<Set<number>>(new Set([0]));
+
+  // The search bar can open a specific question
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      const index = (event as CustomEvent<number>).detail;
+      setOpen((current) => new Set(current).add(index));
+      window.setTimeout(() => document.getElementById(`faq-q-${index}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+    };
+    window.addEventListener("faq:open", onOpen);
+    return () => window.removeEventListener("faq:open", onOpen);
+  }, []);
+
+  function toggle(index: number) {
+    setOpen((current) => {
+      const next = new Set(current);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
 
   return (
-    <section id="faq" aria-labelledby="faq-title" className="section-fit">
-      <div className="container-page grid w-full gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-16">
-        <div data-reveal>
-          <h2 id="faq-title" className="heading">
-            Questions teams ask first
-          </h2>
-          <p className="mt-4 text-[17px] leading-[28px] text-ink-2">Straight answers about models, files and access.</p>
-        </div>
-
-        <div data-reveal>
-          <Accordion type="multiple" className="border-t border-line">
-            {items.map((item) => (
-              <AccordionItem key={item.value} value={item.value} className="border-b border-line">
-                <AccordionTrigger className="py-5 text-[16px] font-medium leading-[1.4] text-ink hover:no-underline">
-                  {item.trigger}
-                </AccordionTrigger>
-                <AccordionContent className="max-w-[40rem] pb-6 text-[15px] leading-[25px] text-ink-2">
-                  {item.content}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+    <section id="faq" aria-labelledby="faq-title" className="py-28 md:py-36">
+      <div className="container-page grid gap-14 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-20">
+        <SectionHead id="faq-title" title="Questions teams ask first" lead="Straight answers about models, files and access." />
+        <div data-reveal className="border-t border-line">
+          {FAQ.map((item, i) => {
+            const isOpen = open.has(i);
+            return (
+              <div key={item.q} className="border-b border-line">
+                <h3>
+                  <button
+                    type="button"
+                    id={`faq-q-${i}`}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-a-${i}`}
+                    onClick={() => toggle(i)}
+                    className="group flex w-full items-center justify-between gap-6 py-6 text-left text-[17px] font-medium leading-[1.4] text-ink"
+                  >
+                    {item.q}
+                    <span className="grid size-8 shrink-0 place-items-center rounded-full border border-line-strong text-ink-2 transition-colors duration-200 group-hover:bg-ink group-hover:text-on-ink">
+                      <Plus className={cn("size-4 transition-transform duration-300 ease-soft", isOpen && "rotate-45")} strokeWidth={1.5} />
+                    </span>
+                  </button>
+                </h3>
+                <div
+                  id={`faq-a-${i}`}
+                  role="region"
+                  aria-labelledby={`faq-q-${i}`}
+                  inert={!isOpen}
+                  className={cn("grid transition-[grid-template-rows,opacity] duration-400 ease-soft", isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
+                >
+                  <div className="overflow-hidden">
+                    <p className="max-w-[40rem] pb-7 text-[15px] leading-[26px] text-ink-2">{item.a(facts)}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

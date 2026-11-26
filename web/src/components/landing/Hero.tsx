@@ -1,55 +1,83 @@
 "use client";
 
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { useRef } from "react";
+
+import { LiquidField } from "@/components/field/LiquidField";
+import { TransitionLink } from "@/components/motion/TransitionLink";
+import { buttonStyles } from "@/components/ui/Button";
 
 import { AskPreview } from "./AskPreview";
 import { RotatingWord } from "./RotatingWord";
-import { WaterBackground } from "./WaterBackground";
 
-const WORDS = ["documents", "files", "PDFs", "Markdown", ".md files", "DOCX files"];
+gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
+
+const WORDS = ["documents", "policies", "handbooks", "contracts", "meeting notes", "PDFs"];
 
 export function Hero() {
-  return (
-    <section
-      aria-labelledby="hero-title"
-      className="section-fit relative -mt-16 overflow-hidden bg-[#050506] pt-16 text-[#f6f4ef]"
-    >
-      <WaterBackground />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,6,0.78)_0%,rgba(5,5,6,0.5)_42%,rgba(5,5,6,0.12)_100%)]"
-      />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10" />
+  const root = useRef<HTMLElement>(null);
 
-      <div className="container-page relative z-10 grid w-full items-center gap-10 pb-16 pt-12 md:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)] lg:gap-14 lg:py-14">
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.set("[data-hero]", { visibility: "visible" });
+        const title = root.current!.querySelector<HTMLElement>("[data-title]")!;
+        const split = SplitText.create(title, { type: "lines", mask: "lines" });
+        const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+        tl.from(".hero-field", { autoAlpha: 0, duration: 2.2, ease: "power2.out" }, 0)
+          .from(split.lines, { yPercent: 110, duration: 1.1, stagger: 0.1 }, 0.15)
+          .from("[data-hero-fade]", { autoAlpha: 0, y: 18, duration: 0.9, stagger: 0.1 }, 0.55)
+          .from("[data-hero-window]", { autoAlpha: 0, y: 56, duration: 1.3 }, 0.4);
+
+        // The preview drifts up slightly as the page scrolls past it
+        gsap.to("[data-hero-window]", {
+          yPercent: -4,
+          ease: "none",
+          scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: 0.6 },
+        });
+        return () => split.revert();
+      });
+      return () => mm.revert();
+    },
+    { scope: root },
+  );
+
+  return (
+    <section ref={root} aria-labelledby="hero-title" className="relative isolate -mt-16 overflow-hidden pt-16">
+      <div className="hero-field absolute inset-0 -z-10">
+        <LiquidField scale={1.5} lines={13} calm={[0.55, 0.3]} />
+      </div>
+
+      <div className="container-page grid max-w-[1520px] items-center gap-10 pb-20 pt-14 md:pt-20 xl:min-h-[calc(100svh-2.5rem)] xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.5fr)] xl:gap-14 xl:py-12">
         <div>
-          <h1
-            id="hero-title"
-            aria-label="Ask your documents anything, and get the source back"
-            className="hero-rise display max-w-[14ch] text-[38px] leading-[1.04] sm:text-[52px] xl:text-[58px]"
-          >
-            Ask your <RotatingWord words={WORDS} /> anything.
+          <h1 id="hero-title" data-hero data-title className="display text-[48px] sm:text-[64px] xl:text-[60px] 2xl:text-[72px]">
+            <span className="sr-only">Ask your documents anything.</span>
+            <span aria-hidden="true">
+              Ask your <RotatingWord words={WORDS} /> anything.
+            </span>
           </h1>
-          <div data-reveal className="mt-9 flex flex-wrap items-center gap-3 sm:mt-11 sm:gap-4">
-            <Link
-              href="/dashboard"
-              className="group inline-flex h-12 items-center gap-2 rounded-[10px] bg-[#f6f4ef] px-6 text-[15px] font-medium text-[#0a0a0a] transition-[background-color,transform] duration-150 hover:bg-white active:scale-[0.98]"
-            >
+          <p data-hero data-hero-fade className="lead mt-7">
+            Answers come only from the files each person is allowed to open, with the passage they came from attached.
+          </p>
+          <div data-hero data-hero-fade className="mt-10 flex flex-wrap items-center gap-3">
+            <TransitionLink href="/login" className={buttonStyles({ size: "lg" })}>
               Open workspace
-              <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={1.5} />
-            </Link>
-            <Link
-              href="#how"
-              className="inline-flex h-12 items-center px-2 text-[15px] font-medium text-white/70 transition-colors duration-150 hover:text-white"
-            >
+              <ArrowRight className="size-4" strokeWidth={1.5} />
+            </TransitionLink>
+            <TransitionLink href="/#how" className={buttonStyles({ variant: "ghost", size: "lg" })}>
               See how it works
-            </Link>
+            </TransitionLink>
           </div>
         </div>
 
-        <div data-reveal className="min-w-0 [.js-motion_&]:invisible">
+        <div data-hero data-hero-window className="min-w-0">
           <AskPreview />
+          <p className="mt-3 text-center text-[12px] text-ink-3 xl:text-left">Sample documents. Press a file name to see what was taken from it.</p>
         </div>
       </div>
     </section>

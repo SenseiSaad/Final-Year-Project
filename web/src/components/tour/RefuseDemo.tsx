@@ -4,7 +4,7 @@ import { CircleSlash } from "lucide-react";
 import { useState } from "react";
 
 import { Cited } from "@/components/landing/Cited";
-import { Segmented } from "@/components/landing/Segmented";
+import { Segmented } from "@/components/ui/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { Facts } from "@/lib/facts";
 import { refuseSamples } from "@/lib/samples";
@@ -41,7 +41,7 @@ export function RefuseDemo({ facts }: { facts: Facts }) {
             <span
               style={{ width: `${sample.score * 100}%` }}
               className={`absolute inset-y-0 left-0 origin-left animate-[grow-x_900ms_var(--ease-out-soft)] rounded-full ${
-                sample.answered ? "bg-accent" : "bg-ink-3"
+                sample.answered ? "bg-ink" : "bg-ink-3"
               }`}
             />
             <span

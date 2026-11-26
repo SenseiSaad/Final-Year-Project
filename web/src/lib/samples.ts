@@ -11,6 +11,8 @@ export type AskSample = {
   // Answer as text pieces and citation keys, streamed in order
   answer: (string | { cite: string })[];
   meta: string;
+  // What each file is, in one line
+  files: Record<string, string>;
   sources: Record<string, Passage>;
 };
 
@@ -28,6 +30,10 @@ export const askSamples: AskSample[] = [
       ".",
     ],
     meta: "4 passages from 2 documents you can open · 1.8 s",
+    files: {
+      "leave-policy.pdf": "The company leave policy: entitlements, carry-over rules and when carried days expire.",
+      "hr-handbook.docx": "The HR handbook: how staff submit requests and who approves them.",
+    },
     sources: {
       "leave-policy.pdf | 3": {
         ref: "leave-policy.pdf | 3",
@@ -57,6 +63,9 @@ export const askSamples: AskSample[] = [
       ".",
     ],
     meta: "3 passages from 1 document you can open · 2.1 s",
+    files: {
+      "expense-policy.pdf": "The expense policy: what can be claimed, which approvals are needed and when claims are refused.",
+    },
     sources: {
       "expense-policy.pdf | 2": {
         ref: "expense-policy.pdf | 2",

@@ -3,7 +3,7 @@
 import { FileText, Lock } from "lucide-react";
 import { useState } from "react";
 
-import { Segmented } from "@/components/landing/Segmented";
+import { Segmented } from "@/components/ui/Segmented";
 import { docs, people } from "@/lib/samples";
 
 export function AccessDemo() {
@@ -41,7 +41,7 @@ export function AccessDemo() {
               <span className="hidden truncate text-[13px] text-ink-3 sm:block">{doc.department}</span>
               <span
                 className={`ml-auto shrink-0 rounded-md px-2 py-0.5 text-[12px] ${
-                  access ? "bg-accent-soft text-accent-ink" : "text-ink-3"
+                  access ? "bg-raised text-ink" : "text-ink-3"
                 }`}
               >
                 {access === "Shared" ? `Shared by ${doc.owner.split(" ")[0]}` : (access ?? "Not visible")}

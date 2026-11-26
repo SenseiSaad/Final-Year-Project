@@ -1,41 +1,39 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import gsap from "gsap";
+import { useEffect, useRef, useState } from "react";
 
-export function RotatingWord({
-  words,
-  interval = 2600,
-  className = "",
-}: {
-  words: string[];
-  interval?: number;
-  className?: string;
-}) {
+import { useReducedMotion } from "@/components/motion/useReducedMotion";
+
+/* Cycles through words, each rising out of a mask. Hidden from screen readers: the heading carries the plain sentence. */
+export function RotatingWord({ words, interval = 2800 }: { words: string[]; interval?: number }) {
   const [index, setIndex] = useState(0);
   const reduced = useReducedMotion();
+  const ref = useRef<HTMLSpanElement>(null);
+  const first = useRef(true);
   const longest = words.reduce((a, b) => (a.length >= b.length ? a : b), words[0] ?? "");
 
   useEffect(() => {
+    if (reduced) return;
     const timer = window.setInterval(() => setIndex((i) => (i + 1) % words.length), interval);
     return () => window.clearInterval(timer);
-  }, [interval, words.length]);
+  }, [interval, reduced, words.length]);
+
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (reduced) return;
+    gsap.fromTo(ref.current, { yPercent: 105 }, { yPercent: 0, duration: 0.7, ease: "power4.out" });
+  }, [index, reduced]);
 
   return (
-    <span className={`relative inline-grid overflow-hidden align-baseline ${className}`} aria-hidden="true">
+    <span aria-hidden="true" className="relative inline-grid overflow-hidden align-bottom">
       <span className="invisible col-start-1 row-start-1 whitespace-nowrap">{longest}</span>
-      <AnimatePresence initial={false} mode="wait">
-        <motion.span
-          key={words[index]}
-          initial={reduced ? false : { y: "105%", opacity: 0.2 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={reduced ? { opacity: 1 } : { y: "-105%", opacity: 0.2 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className="col-start-1 row-start-1 whitespace-nowrap italic"
-        >
-          {words[index]}
-        </motion.span>
-      </AnimatePresence>
+      <span ref={ref} className="col-start-1 row-start-1 whitespace-nowrap">
+        {words[index]}
+      </span>
     </span>
   );
 }

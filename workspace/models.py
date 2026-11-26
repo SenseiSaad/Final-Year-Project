@@ -301,3 +301,44 @@ class AuditEvent(models.Model):
 
     def __str__(self):
         return f"{self.sequence}: {self.event_type} ({self.event_hash[:12]})"
+
+
+class Note(models.Model):
+    """A private scratch note. Only its owner can read it."""
+
+    owner = models.ForeignKey(DemoPersona, on_delete=models.CASCADE, related_name="notes")
+    title = models.CharField(max_length=160, blank=True)
+    body = models.TextField(max_length=20000, blank=True)
+    pinned = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-pinned", "-updated_at", "-id"]
+
+    def __str__(self):
+        return self.title or "Untitled note"
+
+
+class Announcement(models.Model):
+    """A workspace-wide notice posted by someone allowed to manage announcements."""
+
+    class Level(models.TextChoices):
+        INFO = "info", "Notice"
+        IMPORTANT = "important", "Important"
+
+    title = models.CharField(max_length=160)
+    body = models.TextField(max_length=4000, blank=True)
+    level = models.CharField(max_length=12, choices=Level.choices, default=Level.INFO)
+    pinned = models.BooleanField(default=False)
+    author = models.ForeignKey(
+        DemoPersona, null=True, blank=True, on_delete=models.SET_NULL, related_name="announcements"
+    )
+    author_label = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-pinned", "-created_at", "-id"]
+
+    def __str__(self):
+        return self.title

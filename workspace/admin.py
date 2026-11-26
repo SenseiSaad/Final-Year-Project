@@ -3,17 +3,24 @@ from django.contrib import admin
 from .models import (
     AIMessage,
     AIThread,
+    Announcement,
     AuditEvent,
     DemoPersona,
     Department,
     DocumentChunk,
+    Note,
     TeamMessage,
     TeamRoom,
     WorkspaceDocument,
     WorkspaceRole,
 )
 
-admin.site.register([Department, WorkspaceRole, DemoPersona, TeamRoom])
+admin.site.register([Department, WorkspaceRole, DemoPersona, TeamRoom, Note])
+
+
+@admin.register(Announcement)
+class AnnouncementAdmin(admin.ModelAdmin):
+    list_display = ("title", "level", "pinned", "author_label", "created_at")
 
 
 @admin.register(WorkspaceDocument)

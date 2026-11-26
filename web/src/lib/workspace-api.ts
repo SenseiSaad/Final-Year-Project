@@ -2,7 +2,10 @@
   Browser client for the Django workspace API. The base URL is public by design
   (NEXT_PUBLIC_*); provider keys live only on the Django server.
   The X-Demo-User header picks a synthetic persona. It is not authentication.
+  This frontend always acts as the seeded Administrator: sign-in is open in the demo.
 */
+
+export const DEMO_PERSONA = "admin";
 
 export const API_BASE = (
   process.env.NEXT_PUBLIC_WORKSPACE_API_URL ??
@@ -137,6 +140,7 @@ export type Capabilities = {
   manage_members: boolean;
   manage_roles: boolean;
   view_audit: boolean;
+  manage_announcements: boolean;
 };
 export type ProviderInfo = {
   id: "local" | "gemini" | "hosted";
@@ -181,6 +185,16 @@ export type DocumentItem = {
   can_edit: boolean;
   can_delete: boolean;
   grants?: { roles: number[]; departments: number[]; personas: number[] };
+};
+export type Note = { id: number; title: string; body: string; pinned: boolean; created_at: string; updated_at: string };
+export type Announcement = {
+  id: number;
+  title: string;
+  body: string;
+  level: "info" | "important";
+  pinned: boolean;
+  author: string;
+  created_at: string;
 };
 export type SearchHit = { document_id: number; title: string; page: number | null; snippet: string };
 export type Citation = { source: number; document_id: number; title: string; page: number | null; snippet: string };
@@ -246,4 +260,29 @@ export function formatTime(iso: string): string {
 
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong.";
+}
+
+const DAY = 86_400_000;
+
+/* "Today 14:05", "Yesterday 09:30", "12 Nov" */
+export function formatWhen(iso: string): string {
+  const date = new Date(iso);
+  const days = Math.floor((startOfDay(new Date()) - startOfDay(date)) / DAY);
+  const time = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  if (days === 0) return `Today ${time}`;
+  if (days === 1) return `Yesterday ${time}`;
+  return date.toLocaleDateString(undefined, { day: "numeric", month: "short", ...(days > 300 ? { year: "numeric" } : {}) });
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+export function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join("");
 }

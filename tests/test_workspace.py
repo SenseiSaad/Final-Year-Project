@@ -541,3 +541,45 @@ class CorsTests(WorkspaceTestCase):
         self.assertEqual(bad.status_code, 403)
         plain = self.client.get("/api/workspace/bootstrap/", HTTP_ORIGIN="https://evil.example")
         self.assertNotIn("Access-Control-Allow-Origin", plain)
+
+
+class NotesAndAnnouncementsTests(WorkspaceTestCase):
+    def test_notes_are_private_to_their_owner(self):
+        created = self.call("post", "/api/workspace/notes/", "finance", {"title": "Q4 close", "body": "Chase invoices"})
+        self.assertEqual(created.status_code, 201)
+        note_id = created.json()["note"]["id"]
+        self.assertEqual(len(self.call("get", "/api/workspace/notes/", "finance").json()["notes"]), 1)
+        self.assertEqual(self.call("get", "/api/workspace/notes/", "hr").json()["notes"], [])
+        self.assertEqual(self.call("patch", f"/api/workspace/notes/{note_id}/", "hr", {"body": "x"}).status_code, 404)
+        self.assertEqual(self.call("delete", f"/api/workspace/notes/{note_id}/", "hr").status_code, 404)
+
+    def test_note_can_be_edited_pinned_and_deleted(self):
+        note_id = self.call("post", "/api/workspace/notes/", "admin", {"title": "Draft"}).json()["note"]["id"]
+        edited = self.call("patch", f"/api/workspace/notes/{note_id}/", "admin", {"body": "Body", "pinned": True}).json()["note"]
+        self.assertEqual((edited["title"], edited["body"], edited["pinned"]), ("Draft", "Body", True))
+        self.assertEqual(self.call("patch", f"/api/workspace/notes/{note_id}/", "admin", {"pinned": "yes"}).status_code, 400)
+        self.assertEqual(self.call("delete", f"/api/workspace/notes/{note_id}/", "admin").status_code, 200)
+        self.assertEqual(self.call("get", "/api/workspace/notes/", "admin").json()["notes"], [])
+
+    def test_everyone_reads_announcements_only_permitted_roles_post(self):
+        posted = self.call("post", "/api/workspace/announcements/", "admin",
+                           {"title": "Policy review", "body": "Please read.", "level": "important", "pinned": True})
+        self.assertEqual(posted.status_code, 201)
+        self.assertEqual(self.call("post", "/api/workspace/announcements/", "employee", {"title": "Hi"}).status_code, 403)
+        listed = self.call("get", "/api/workspace/announcements/", "employee").json()["announcements"]
+        self.assertEqual([a["title"] for a in listed], ["Policy review"])
+        self.assertEqual(listed[0]["level"], "important")
+        self.assertTrue(self.call("get", "/api/workspace/bootstrap/", "admin").json()["capabilities"]["manage_announcements"])
+        self.assertFalse(self.call("get", "/api/workspace/bootstrap/", "employee").json()["capabilities"]["manage_announcements"])
+
+    def test_announcement_changes_are_audited_and_validated(self):
+        self.assertEqual(self.call("post", "/api/workspace/announcements/", "admin", {"title": ""}).status_code, 400)
+        self.assertEqual(self.call("post", "/api/workspace/announcements/", "admin", {"title": "T", "level": "loud"}).status_code, 400)
+        item_id = self.call("post", "/api/workspace/announcements/", "admin", {"title": "Old"}).json()["announcement"]["id"]
+        self.call("patch", f"/api/workspace/announcements/{item_id}/", "admin", {"title": "New"})
+        self.assertEqual(self.call("delete", f"/api/workspace/announcements/{item_id}/", "employee").status_code, 403)
+        self.call("delete", f"/api/workspace/announcements/{item_id}/", "admin")
+        types = list(AuditEvent.objects.values_list("event_type", flat=True))
+        self.assertEqual([t for t in types if t.startswith("announcement.")],
+                         ["announcement.create", "announcement.update", "announcement.delete"])
+        self.assertTrue(self.call("get", "/api/workspace/audit/verify/", "admin").json()["valid"])

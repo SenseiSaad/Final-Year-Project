@@ -51,3 +51,9 @@ Thumbs.db
 
 # Uploaded demo documents
 /media/
+
+# Saved copy of the original frontend (also in git history at c9461c0)
+/original-frontend/
+
+# Frontend replaced on 2026-11-26 (kept for reference; also saved as /original-frontend/ and in git at c9461c0)
+/web-replaced/

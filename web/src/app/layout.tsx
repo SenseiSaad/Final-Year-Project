@@ -2,76 +2,54 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 
-import { SiteChrome } from "@/components/site/SiteChrome";
+import { TransitionProvider } from "@/components/motion/TransitionProvider";
+import { ToastProvider } from "@/components/ui/Toast";
+
 import "./globals.css";
 
-const plex = localFont({
-  variable: "--font-plex",
-  display: "swap",
-  src: [
-    { path: "./fonts/ibm-plex-sans-latin-400-normal.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/ibm-plex-sans-latin-500-normal.woff2", weight: "500", style: "normal" },
-    { path: "./fonts/ibm-plex-sans-latin-600-normal.woff2", weight: "600", style: "normal" },
-  ],
-});
-
-const newsreader = localFont({
-  variable: "--font-newsreader",
-  display: "swap",
-  src: [
-    { path: "./fonts/newsreader-latin-400-normal.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/newsreader-latin-500-normal.woff2", weight: "500", style: "normal" },
-  ],
-});
-
-const plexMono = localFont({
-  variable: "--font-plex-mono",
-  display: "swap",
-  src: [
-    { path: "./fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/ibm-plex-mono-latin-500-normal.woff2", weight: "500", style: "normal" },
-  ],
-});
+const sans = localFont({ src: "./fonts/geist-sans.woff2", variable: "--font-geist", weight: "100 900", display: "swap" });
+const mono = localFont({ src: "./fonts/geist-mono.woff2", variable: "--font-geist-mono", weight: "100 900", display: "swap" });
+const display = localFont({ src: "./fonts/newsreader-display.woff2", variable: "--font-display", weight: "400", display: "swap" });
 
 export const metadata: Metadata = {
-  title: {
-    default: "DocuTrust AI · Every answer has a source",
-    template: "%s · DocuTrust AI",
-  },
+  title: { default: "DocuTrust AI · Every answer has a source", template: "%s · DocuTrust AI" },
   description:
-    "DocuTrust AI answers questions from your team's own documents, only from files each person may open, with the source attached. Runs on your own machine.",
+    "DocuTrust AI answers questions from your team's own documents, only from files each person may open, with the source passage attached.",
   icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#121212" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0b" },
   ],
 };
 
-/* Hides reveal targets until scripts take over; a timer shows them if scripts fail to load */
-const motionGate = `(function(){var d=document.documentElement;if(!matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('js-motion');setTimeout(function(){d.classList.remove('js-motion')},3000)}})()`;
+/*
+  Runs before first paint. Marks pages as animated so GSAP can reveal content (with a
+  timer that shows everything if scripts fail), and restores a dismissed announcement.
+*/
+const bootScript = `(function(){var d=document.documentElement;try{if(localStorage.getItem('announce')==='off')d.setAttribute('data-announce-off','')}catch(e){}if(!matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('js-motion');setTimeout(function(){d.classList.remove('js-motion')},3500)}})()`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${plex.variable} ${newsreader.variable} ${plexMono.variable}`}
-    >
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable} ${display.variable}`}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: motionGate }} />
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body className="min-h-dvh flex flex-col">
-        <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <a
-            href="#main"
-            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2"
-          >
-            Skip to content
-          </a>
-          <SiteChrome>{children}</SiteChrome>
+      <body className="min-h-dvh">
+        <ThemeProvider attribute="data-theme" defaultTheme="dark" disableTransitionOnChange>
+          <TransitionProvider>
+            <ToastProvider>
+              <a
+                href="#main"
+                className="sr-only rounded-[10px] bg-ink px-4 py-2 text-on-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100]"
+              >
+                Skip to content
+              </a>
+              {children}
+            </ToastProvider>
+          </TransitionProvider>
         </ThemeProvider>
       </body>
     </html>

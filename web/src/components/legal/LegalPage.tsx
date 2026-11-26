@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { ScrollReveal } from "@/components/motion/ScrollReveal";
+
 import { Toc } from "./Toc";
 
 /* Shows a legal fact from config.toml, or a clear marker while it is still missing */
@@ -28,9 +30,10 @@ export function LegalPage({
   return (
     <article className="container-page pb-24 pt-16 md:pb-32 md:pt-24">
       <header className="max-w-[44rem] border-b border-line pb-10">
-        <p className="text-[13px] text-ink-3">Legal</p>
-        <h1 className="display mt-4 text-[44px] sm:text-[56px]">{title}</h1>
-        <p className="mt-6 text-[14px] text-ink-3">
+        <h1 data-split className="display text-[44px] sm:text-[64px]">
+          {title}
+        </h1>
+        <p data-reveal className="mt-6 text-[14px] text-ink-3">
           Effective <Fact value={effective} label="Date" />
         </p>
       </header>
@@ -41,6 +44,7 @@ export function LegalPage({
           {children}
         </div>
       </div>
+      <ScrollReveal />
     </article>
   );
 }

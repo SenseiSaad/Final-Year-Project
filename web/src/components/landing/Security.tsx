@@ -1,5 +1,7 @@
 import { Cloud, FileText, Filter, KeyRound, Link2, UserRoundCog } from "lucide-react";
 
+import { SectionHead } from "./SectionHead";
+
 export function Security({ maxFileMb }: { maxFileMb: number }) {
   const items = [
     {
@@ -29,27 +31,28 @@ export function Security({ maxFileMb }: { maxFileMb: number }) {
     },
     {
       icon: UserRoundCog,
-      title: "Demo access, no sign-in",
-      text: "The persona selector previews permissions; it is not authentication. Use synthetic documents only, never real employee or customer data.",
+      title: "Open demo access",
+      text: "Sign-in is open in this demo and everyone enters as an administrator. Use synthetic documents only, never real employee or customer data.",
     },
   ];
 
   return (
-    <section id="security" aria-labelledby="security-title" className="section-fit border-y border-line bg-deep/60">
-      <div className="container-page grid w-full gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-16">
-        <div data-reveal>
-          <h2 id="security-title" className="heading">
-            What stays where
-          </h2>
-          <p className="mt-4 text-[17px] leading-[28px] text-ink-2">
-            Plain statements about where your questions go and what the demo does and does not protect.
-          </p>
+    <section id="security" aria-labelledby="security-title" className="border-y border-line bg-deep py-28 md:py-36">
+      <div className="container-page grid gap-14 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-20">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <SectionHead
+            id="security-title"
+            title="What stays where"
+            lead="Plain statements about where your questions go and what the demo does and does not protect."
+          />
         </div>
-        <ul className="grid gap-x-8 gap-y-8 sm:grid-cols-2">
+        <ul className="grid gap-x-10 gap-y-12 sm:grid-cols-2">
           {items.map((item) => (
             <li key={item.title} data-reveal>
-              <item.icon className="size-[18px] text-ink-2" strokeWidth={1.5} />
-              <h3 className="mt-4 text-[16px] font-medium">{item.title}</h3>
+              <span className="grid size-10 place-items-center rounded-[10px] border border-line-strong text-ink">
+                <item.icon className="size-[18px]" strokeWidth={1.5} />
+              </span>
+              <h3 className="mt-5 text-[17px] font-medium tracking-[-0.005em]">{item.title}</h3>
               <p className="mt-2 text-[14px] leading-[23px] text-ink-2">{item.text}</p>
             </li>
           ))}

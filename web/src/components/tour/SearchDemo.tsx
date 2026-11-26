@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Segmented } from "@/components/landing/Segmented";
+import { Segmented } from "@/components/ui/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { Facts } from "@/lib/facts";
 import { searchSamples } from "@/lib/samples";
@@ -30,7 +30,7 @@ export function SearchDemo({ facts }: { facts: Facts }) {
         <Segmented label="Sample question" options={searchSamples.map((s) => s.label)} value={index} onChange={setIndex} />
         <div className="flex gap-4 text-[12px] text-ink-3">
           <span className="flex items-center gap-1.5">
-            <i className="size-2 rounded-[2px] bg-accent" /> Meaning × {facts.meaningWeight}
+            <i className="size-2 rounded-[2px] bg-ink" /> Meaning × {facts.meaningWeight}
           </span>
           <span className="flex items-center gap-1.5">
             <i className="size-2 rounded-[2px] bg-ink-3/50" /> Keyword × {facts.keywordWeight}
@@ -54,7 +54,7 @@ export function SearchDemo({ facts }: { facts: Facts }) {
                 <div className="flex h-1.5 flex-1 overflow-hidden rounded-full bg-raised">
                   <span
                     style={{ width: `${row.meaning * 100}%`, animationDelay: `${i * 60}ms` }}
-                    className="h-full origin-left animate-[grow-x_800ms_var(--ease-out-soft)] bg-accent"
+                    className="h-full origin-left animate-[grow-x_800ms_var(--ease-out-soft)] bg-ink"
                   />
                   <span
                     style={{ width: `${row.keyword * 100}%`, animationDelay: `${i * 60}ms` }}

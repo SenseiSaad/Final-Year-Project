@@ -26,7 +26,7 @@ def check_files() -> tuple[bool, str]:
         BASE_DIR / "docutrust_site" / "settings.py",
         BASE_DIR / "docutrust_site" / "urls.py",
         BASE_DIR / "web" / "package.json",
-        BASE_DIR / "web" / "src" / "app" / "page.tsx",
+        BASE_DIR / "web" / "src" / "app" / "(site)" / "page.tsx",
     ]
     missing = [str(path.relative_to(BASE_DIR)) for path in required if not path.is_file()]
     if missing:
